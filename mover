@@ -1,0 +1,54 @@
+#!/bin/bash
+
+ENOARGS=65
+ENOFILE=66
+
+# Se chequean parametros obligatorios
+if [ $# -lt 2 ]; then
+	echo "Uso: `basename $0` origen destino [comando]"
+	exit $ENOARGS
+fi
+
+# Si el destino es igual al origen no se debe hacer nada
+if [ "$1" = "$2" ]; then
+	echo "Archivo de destino igual a archivo de origen"
+	exit $ENOARGS
+fi
+
+# Se verifica que el origen exista
+if [ ! -e $1 ]; then
+	echo "$1 no es un archivo de origen valido"
+	exit $ENOFILE
+fi
+
+DEST=$2
+
+# Si el destino es un directorio se asume copiar con igual nombre
+if [ -e $2 -a -d $2 ]; then
+	echo "$2 existe y es directorio" # Quitar
+	DEST="${2%/}"/$(basename $1)
+fi
+
+echo "Destino: $DEST"
+
+# Si no es duplicado se mueve y se termina la ejecucion
+if [ ! -e $DEST ]; then
+	mv $1 $DEST
+	exit 0
+
+# Si es duplicado se gestiona la secuencia
+else
+	DIRDEST="$(dirname $DEST)"
+	echo "Dir destino: $DIRDEST"
+
+	# Si no existe se crea el directorio de duplicados
+	if [ ! -d "$DIRDEST"/dup ]; then
+		mkdir "$DIRDEST"/dup 
+		# No existia el directorio,
+		#+por lo tanto es el primero de la serie
+		mv $DEST "$DIRDEST"/dup/"$(basename $DEST)".1
+		mv $1 $DEST
+	fi
+fi
+
+exit 0
