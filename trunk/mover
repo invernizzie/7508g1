@@ -1,7 +1,25 @@
 #!/bin/bash
 
+# Codigos de error
 ENOARGS=65
 ENOFILE=66
+
+# Funcion para determinar el orden de secuencia
+det_sec() {
+	SEC=1
+
+	for ARCH in "$DIRDEST"/dup/"$(basename $DEST)".*
+	do
+		# Se extrae la secuencia de los duplicados existentes
+		TMP=$(expr "$ARCH" : '.*\(\.[0-9]*\)')
+		TMP=${TMP:1}
+
+		# Se incrementa en uno el valor actual de la secuencia
+		if [ "$TMP" -ge "$SEC" ] &>/dev/null; then
+			SEC=$((TMP+1))
+		fi
+	done
+}
 
 # Se chequean parametros obligatorios
 if [ $# -lt 2 ]; then
@@ -25,11 +43,8 @@ DEST=$2
 
 # Si el destino es un directorio se asume copiar con igual nombre
 if [ -e $2 -a -d $2 ]; then
-	echo "$2 existe y es directorio" # Quitar
 	DEST="${2%/}"/$(basename $1)
 fi
-
-echo "Destino: $DEST"
 
 # Si no es duplicado se mueve y se termina la ejecucion
 if [ ! -e $DEST ]; then
@@ -39,16 +54,15 @@ if [ ! -e $DEST ]; then
 # Si es duplicado se gestiona la secuencia
 else
 	DIRDEST="$(dirname $DEST)"
-	echo "Dir destino: $DIRDEST"
 
 	# Si no existe se crea el directorio de duplicados
 	if [ ! -d "$DIRDEST"/dup ]; then
 		mkdir "$DIRDEST"/dup 
-		# No existia el directorio,
-		#+por lo tanto es el primero de la serie
-		mv $DEST "$DIRDEST"/dup/"$(basename $DEST)".1
-		mv $1 $DEST
 	fi
+
+	det_sec
+	mv $DEST "$DIRDEST"/dup/"$(basename $DEST)".$SEC
+	mv $1 $DEST
 fi
 
 exit 0
