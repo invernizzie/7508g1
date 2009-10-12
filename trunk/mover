@@ -4,6 +4,15 @@
 ENOARGS=65
 ENOFILE=66
 
+# Funcion para imprimir por consola y al log
+imprimir() {
+	echo $1
+	
+	if [ $USAR_LOG ]; then
+		echo "Comando invocante: $COMANDO" # Reemplazar por GLog...
+	fi
+}
+
 # Funcion para determinar el orden de secuencia
 det_sec() {
 	SEC=1
@@ -19,23 +28,30 @@ det_sec() {
 			SEC=$((TMP+1))
 		fi
 	done
+	
+	imprimir "Mover: Duplicado numero $SEC" i
 }
 
 # Se chequean parametros obligatorios
-if [ $# -lt 2 ]; then
-	echo "Uso: `basename $0` origen destino [comando]"
+if [ $# -lt 2 -o $# -gt 3 ]; then
+	imprimir "Uso: `basename $0` origen destino [comando]" se
 	exit $ENOARGS
+fi
+
+if [ $# -eq 3 ]; then
+	USAR_LOG=1
+	COMANDO=$3
 fi
 
 # Si el destino es igual al origen no se debe hacer nada
 if [ "$1" = "$2" ]; then
-	echo "Archivo de destino igual a archivo de origen"
+	imprimir "Mover: Archivo de destino igual a archivo de origen" w
 	exit $ENOARGS
 fi
 
 # Se verifica que el origen exista
 if [ ! -e $1 ]; then
-	echo "$1 no es un archivo de origen valido"
+	imprimir "Mover: $1 no es un archivo de origen valido" e
 	exit $ENOFILE
 fi
 
@@ -49,6 +65,9 @@ fi
 # Si no es duplicado se mueve y se termina la ejecucion
 if [ ! -e $DEST ]; then
 	mv $1 $DEST
+	if [ $# -eq 3 ]; then
+		imprimir "Mover: exitoso de $1 a $DEST" i
+	fi
 	exit 0
 
 # Si es duplicado se gestiona la secuencia
