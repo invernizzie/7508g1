@@ -1,0 +1,34 @@
+#! /bin/bash 
+
+
+ENOENTORNO=14
+
+if [ ! $ENTORNO_INICIALIZADO ]; then
+	echo "Detectar: Entorno no inicializado"
+	exit $ENOENTORNO
+fi
+
+DETECTAR=$(basename $0)
+CANTDETECTAR=$(ps -e | grep $DETECTAR | wc -l)
+echo "CANTDETECTAR=$CANTDETECTAR"
+CORRIENDO=$(ps -e | grep $DETECTAR)
+echo "CORRIENDO=$CORRIENDO"
+
+# Funcion para imprimir por consola y al log
+imprimir() {
+	echo $1
+	
+	glog $DETECTAR $2 "$1"
+}
+
+if [ $alskdlaksd ]; then
+	imprimir "Detectar ya esta corriendo" W
+	exit 0
+fi
+
+imprimir "Detectar iniciado" I
+
+while [ 1 ]
+do
+	sleep 1
+done
