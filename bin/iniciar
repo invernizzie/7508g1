@@ -10,7 +10,7 @@ fi
 # TODO Leer las variables de un archivo de configuracion.
 
 export PATH=$PATH:.
-export LOGDIR=.
+export LOGDIR=../log
 export MAXLOG=1024
 export CANLOOP=100
 export ENTORNO_INICIALIZADO=1
@@ -18,5 +18,4 @@ export ENTORNO_INICIALIZADO=1
 # Corre detectar en modo background.
 detectar &
 
-echo "Entorno inicializado. Ejecutar exit para salir."
-bash
+echo "Entorno inicializado"
