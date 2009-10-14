@@ -4,18 +4,18 @@
 if [ $ENTORNO_INICIALIZADO ]; then
 	echo "Entorno ya inicializado"
 	glog iniciar E "Entorno ya inicializado" 
-	exit 13
+else
+	# TODO Leer las variables de un archivo de configuracion.
+
+	export PATH=$PATH:.
+	export LOGDIR=../log
+	export MAXLOG=1024
+	export CANLOOP=100
+	export ENTORNO_INICIALIZADO=1
+
+	# Corre detectar en modo background.
+	detectar &
+
+	echo "Entorno inicializado correctamente"
+	glog iniciar I "Entorno inicializado correctamente"
 fi
-
-# TODO Leer las variables de un archivo de configuracion.
-
-export PATH=$PATH:.
-export LOGDIR=../log
-export MAXLOG=1024
-export CANLOOP=100
-export ENTORNO_INICIALIZADO=1
-
-# Corre detectar en modo background.
-detectar &
-
-echo "Entorno inicializado"
