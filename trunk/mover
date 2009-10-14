@@ -1,15 +1,27 @@
 #!/bin/bash
 
+# Inicializaci'on de las variables.
+# TODO cambiar por una llamada a INICIAR.
+#PATH=$PATH:.
+
 # Codigos de error
 ENOARGS=65
 ENOFILE=66
+
+ENOENTORNO=14
+
+if [ ! $ENTORNO_INICIALIZADO ]; then
+	echo "Mover: Entorno no inicializado"
+	exit $ENOENTORNO
+fi
 
 # Funcion para imprimir por consola y al log
 imprimir() {
 	echo $1
 	
 	if [ $USAR_LOG ]; then
-		echo "Comando invocante: $COMANDO" # Reemplazar por GLog...
+		#echo "Comando invocante: $COMANDO" # Reemplazar por GLog...
+		glog $COMANDO $2 "$1"
 	fi
 }
 
@@ -29,12 +41,12 @@ det_sec() {
 		fi
 	done
 	
-	imprimir "Mover: Duplicado numero $SEC" i
+	imprimir "Mover: Duplicado numero $SEC" I
 }
 
 # Se chequean parametros obligatorios
 if [ $# -lt 2 -o $# -gt 3 ]; then
-	imprimir "Uso: `basename $0` origen destino [comando]" se
+	imprimir "Uso: `basename $0` origen destino [comando]" SE
 	exit $ENOARGS
 fi
 
@@ -45,13 +57,13 @@ fi
 
 # Si el destino es igual al origen no se debe hacer nada
 if [ "$1" = "$2" ]; then
-	imprimir "Mover: Archivo de destino igual a archivo de origen" w
+	imprimir "Mover: Archivo de destino igual a archivo de origen" W
 	exit $ENOARGS
 fi
 
 # Se verifica que el origen exista
 if [ ! -e $1 ]; then
-	imprimir "Mover: $1 no es un archivo de origen valido" e
+	imprimir "Mover: $1 no es un archivo de origen valido" E
 	exit $ENOFILE
 fi
 
@@ -66,7 +78,7 @@ fi
 if [ ! -e $DEST ]; then
 	mv $1 $DEST
 	if [ $# -eq 3 ]; then
-		imprimir "Mover: exitoso de $1 a $DEST" i
+		imprimir "Mover: exitoso de $1 a $DEST" I
 	fi
 	exit 0
 
