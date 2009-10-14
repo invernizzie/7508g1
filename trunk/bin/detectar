@@ -9,20 +9,30 @@ if [ ! $ENTORNO_INICIALIZADO ]; then
 fi
 
 DETECTAR=$(basename $0)
-CANTDETECTAR=$(ps -e | grep $DETECTAR | wc -l)
-echo "CANTDETECTAR=$CANTDETECTAR"
-CORRIENDO=$(ps -e | grep $DETECTAR)
-echo "CORRIENDO=$CORRIENDO"
 
 # Funcion para imprimir por consola y al log
 imprimir() {
 	echo $1
-	
 	glog $DETECTAR $2 "$1"
 }
 
-if [ 1 ]; then
-	imprimir "Detectar ya esta corriendo" W
+# De todos los procesos actuales, selecciona los que se llaman detectar y cuenta
+# cuántos son.
+
+# Esto no funca.
+CANTDETECTAR1=$(ps -e | grep $DETECTAR | wc -l)
+echo "CANTDETECTAR1=$CANTDETECTAR1"
+
+# Esto si.
+ps -e | grep $DETECTAR | wc -l >temporal_secreto1234
+CANTDETECTAR2=$(cat temporal_secreto1234)
+rm temporal_secreto1234
+echo "CANTDETECTAR2=$CANTDETECTAR2"
+
+
+# Chequea que no haya mas de una instancia de detectar corriendo (la actual).
+if [ 1 ]; then 
+	#imprimir "Detectar ya esta corriendo" W
 	exit 0
 fi
 
