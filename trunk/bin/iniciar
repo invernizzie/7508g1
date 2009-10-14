@@ -7,7 +7,8 @@ if [ $ENTORNO_INICIALIZADO ]; then
 else
 	# TODO Leer las variables de un archivo de configuracion.
 
-	export PATH=$PATH:.
+	# Debe usarse dirname y no ".", ya que puede invocarse cualquier comando desde otro directorio
+	export PATH=$PATH:`dirname $0`
 	export LOGDIR=../log
 	export MAXLOG=1024
 	export CANLOOP=100

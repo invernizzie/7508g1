@@ -59,15 +59,16 @@ echo "$DATE-$TIPO_MSJ-$MENSAJE" >> $LOGFILE
 
 # Si el archivo se pasa de $MAXLOG se trunca a MAXLINES.
 SIZE=$(stat -c %s $LOGFILE)
+# Cuidado! Si MAXLOG esta declarada pero no es un entero, 
+# la comparacion falla y el script termina con error
 if [ ! -z $MAXLOG ] && [ $SIZE -gt $MAXLOG ]; then
 	tail -n $MAXLINES $LOGFILE >$LOGFILE.temp
-	rm $LOGFILE
-	mv $LOGFILE.temp $LOGFILE
+	mv -f $LOGFILE.temp $LOGFILE
 fi
 
 # Si se sigue pasando de tamanio, se trunca a cero.
 SIZE=$(stat -c %s $LOGFILE)
-if [ $SIZE -gt $MAXLOG ]; then
+if [ ! -z $MAXLOG ] && [ $SIZE -gt $MAXLOG ]; then
 	>$LOGFILE
 fi
 
