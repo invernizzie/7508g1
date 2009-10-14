@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Inicializaci'on de las variables.
+# Inicializacion de las variables.
 # TODO cambiar por una llamada a INICIAR.
 #PATH=$PATH:.
 
@@ -10,18 +10,12 @@ ENOFILE=66
 
 ENOENTORNO=14
 
-if [ ! $ENTORNO_INICIALIZADO ]; then
-	echo "Mover: Entorno no inicializado"
-	exit $ENOENTORNO
-fi
-
 # Funcion para imprimir por consola y al log
 imprimir() {
 	echo $1
 	
 	if [ $USAR_LOG ]; then
-		#echo "Comando invocante: $COMANDO" # Reemplazar por GLog...
-		glog $COMANDO $2 "$1"
+		glog "$COMANDO" $2 "$1"
 	fi
 }
 
@@ -43,6 +37,11 @@ det_sec() {
 	
 	imprimir "Mover: Duplicado numero $SEC" I
 }
+
+#if [ ! $ENTORNO_INICIALIZADO ]; then
+#	imprimir "Mover: Entorno no inicializado"
+#	exit $ENOENTORNO
+#fi
 
 # Se chequean parametros obligatorios
 if [ $# -lt 2 -o $# -gt 3 ]; then
