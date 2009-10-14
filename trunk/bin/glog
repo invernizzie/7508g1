@@ -54,7 +54,7 @@ fi
 
 # Escribe en el archivo log.
 LOGFILE=$LOGDIR/$COMANDO.log
-DATE=$(date '+%Y/%m/%d %X')
+DATE=$(date '+%Y/%m/%d %H:%M:%S')
 echo "$DATE-$TIPO_MSJ-$MENSAJE" >> $LOGFILE
 
 # Si el archivo se pasa de $MAXLOG se trunca a MAXLINES.

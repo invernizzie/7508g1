@@ -21,7 +21,7 @@ imprimir() {
 	glog $DETECTAR $2 "$1"
 }
 
-if [ $alskdlaksd ]; then
+if [ 1 ]; then
 	imprimir "Detectar ya esta corriendo" W
 	exit 0
 fi
