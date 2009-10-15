@@ -11,6 +11,7 @@ ENOFILE=66
 ENOENTORNO=14
 
 # Funcion para imprimir por consola y al log
+# Uso: imprimir mensaje [tipo]
 imprimir() {
 	echo $1
 	
@@ -35,9 +36,12 @@ det_sec() {
 		fi
 	done
 	
-	imprimir "Mover: Duplicado numero $SEC" I
+	imprimir "Mover: Duplicado de $(basename $DEST)
+
+ numero $SEC" I
 }
 
+# TODO Determinar si es necesario contar con el entorno inicializado
 #if [ ! $ENTORNO_INICIALIZADO ]; then
 #	imprimir "Mover: Entorno no inicializado"
 #	exit $ENOENTORNO
@@ -90,7 +94,10 @@ else
 		mkdir "$DIRDEST"/dup 
 	fi
 
+	# Se determina el numero de secuencia siguiente
 	det_sec
+	# Se mueve la version actual a /dup, se la reemplaza por la nueva
+	# TODO ¿Esto es correcto o debe dejarse la actual?
 	mv $DEST "$DIRDEST"/dup/"$(basename $DEST)".$SEC
 	mv $1 $DEST
 fi

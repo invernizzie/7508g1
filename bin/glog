@@ -48,6 +48,7 @@ fi
 #fi
 
 # Si el directorio de logs no existe lo crea.
+# TODO ¿Que pasa si existe pero es un archivo, no un directorio?
 if [ ! -e $LOGDIR ]; then
 	mkdir -p $LOGDIR
 fi
