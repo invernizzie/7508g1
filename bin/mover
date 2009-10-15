@@ -36,9 +36,7 @@ det_sec() {
 		fi
 	done
 	
-	imprimir "Mover: Duplicado de $(basename $DEST)
-
- numero $SEC" I
+	imprimir "Mover: Duplicado de $(basename $DEST) numero $SEC" I
 }
 
 # TODO Determinar si es necesario contar con el entorno inicializado
