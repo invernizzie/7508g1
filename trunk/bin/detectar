@@ -1,50 +1,91 @@
 #! /bin/bash 
 
-
 ENOENTORNO=14
+ENODATADIR=15
+ENODIR=16
+
+DATADIR=./data # TODO Temporario para pruebas: ¿DATADIR debe ser parte del entorno?
+TABLA="$GRUPO/conf/p-s.tab"	# Tabla de Paises y Sistemas
+DIROK="$DATADIR/ok"
+DIRNOK="$DATADIR/nok"
+
+DETECTAR=$(basename $0)
+
+# Funcion para imprimir por consola y al log
+# Uso: imprimir mensaje [tipo]
+imprimir() {
+	echo $1
+	glog $DETECTAR $2 "$1"
+}
+
+# Funcion para contar las instancias de un proceso dado su nombre
+# Uso: contar_instancias proceso
+# Almacena la cantidad contada en CANTINST
+contar_instancias() {
+	if [ -z $1 ]; then
+		return
+	fi
+	
+	# De los procesos existentes, se cuentan las instancias del buscado
+	CANTINST=$(ps -e | grep "$1" | wc -l)
+	# Debe restarse uno porque el subshell abierto incrementa la cantidad de instancias
+	if [ "$1" = $DETECTAR ]; then (( CANTINST -= 1 )); fi
+}
+
+# Funciona para validar los nombres de archivos de entrada
+# Uso: validar_nombre archivo
+validar_nombre() {
+	
+}
 
 if [ ! $ENTORNO_INICIALIZADO ]; then
 	echo "Detectar: Entorno no inicializado"
 	exit $ENOENTORNO
 fi
 
-DETECTAR=$(basename $0)
-
-# Funcion para imprimir por consola y al log
-imprimir() {
-	echo $1
-	glog $DETECTAR $2 "$1"
-}
-
-# De todos los procesos actuales, selecciona los que se llaman detectar y cuenta
-#+cuántos son.
-CANTDETECTAR=$(ps -e | grep $DETECTAR | wc -l)
-# Debe restarse uno porque el subshell abierto incrementa la cantidad de instancias informadas por ps
-(( CANTDETECTAR -= 1 ))
-
-# Forma alternativa (no siempre funciona bien, usa archivo temporal)
-#ps -e | grep $DETECTAR | wc -l >temporal_secreto1234
-#CANTDETECTAR2=$(cat temporal_secreto1234)
-#rm temporal_secreto1234
-#echo "CANTDETECTAR2=$CANTDETECTAR2"
-
-# Chequea que no haya mas de una instancia de detectar corriendo (la actual).
-if [ $CANTDETECTAR1 -gt 1 ]; then 
+# Solo se permite una instancia activa de este script.
+contar_instancias $DETECTAR
+if [ $CANTINST -gt 1 ]; then 
 	imprimir "Detectar ya esta corriendo" W
 	exit 0
 fi
 
 imprimir "Detectar iniciado" I
 
-CICLOS=0
-CANLOOP=3
+# El directorio de entrada de archivos debe existir
+if [ ! -d $DATADIR ]; then
+	imprimir "El directorio de entrada $DATADIR no existe" SE
+	exit $ENODATADIR
+fi
 
+# Los directorios donde se moveran los archivos, de no existir, se crean
+if [ ! -d $DIROK ]; then
+	# Si existe un archivo con el nombre de uno de los directorios
+	#+se esta ante un error severo.
+	if [ -e $DIROK ]; then
+		imprimir "El directorio de aceptados $DIROK no es un directorio" SE
+		exit $ENODIR
+	fi
+	mkdir $DIROK
+fi
+if [ ! -d $DIRNOK ]; then
+	if [ -e $DIRNOK ]; then
+		imprimir "El directorio de aceptados $DIROK no es un directorio" SE
+		exit $ENODIR
+	fi
+	mkdir $DIRNOK
+fi
+
+CICLOS=0
+CANLOOP=3 # TODO Borrar, usado para pruebas
+
+# Bucle principal del demonio
 while [ 1 ]
 do
 	(( CICLOS += 1 ))
 	imprimir "Ciclo #$CICLOS"
 	
-	
+	# Se procesan los archivos del directorio de entrada
 	LISTA=$(ls -1 $DATADIR)
 	ARCHIVOS=( $LISTA ) # Array que contiene cada linea de la lista como un elemento
 	# Para cada elemento del directorio se realiza el procesamiento necesario
@@ -53,8 +94,31 @@ do
 		# No se procesan directorios
 		if [ -d $ARCHIVO ]; then continue; fi
 		
-		echo $ARCHIVO
+		echo "Archivo procesado: $ARCHIVO"
+		if validar_nombre $ARCHIVO; then
+			mover $ARCHIVO $DIROK $DETECTAR
+			imprimir "Recibido: $ARCHIVO"
+		else
+			mover $ARCHIVO $DIRNOK $DETECTAR
+			imprimir "Rechazado: $ARCHIVO"
+		fi
 	done
+	
+	# Variable que indica si entre este ciclo y el siguiente el demonio duerme o no. Si hay
+	#+archivos en el directorio de validos, no se dormira para permitir su procesamiento inmediato.
+	DORMIR=1
+	# Si hay archivos de entrada validos se invoca al interprete
+	LISTA=$(ls -1 $DIROK)
+	ARCHIVOS=( $LISTA )
+	if [ ${#ARCHIVOS[*]} -gt 0 ]; then
+		DORMIR=0
+		# Solo puede correr una instancia del interprete
+		contar_instancias "interprete"
+		if [ $CANTINST -lt 1 ]; then
+			interprete&
+			# TODO ¿Como saber si arranco bien para hacer lo que pide el enunciado?
+		fi
+	fi
 	
 	# Se sale al alcanzar la cantidad maxima de ciclos de ejecucion
 	if [ "$CICLOS" -ge "$CANLOOP" ]; then
@@ -62,5 +126,5 @@ do
 		exit 0
 	fi
 	
-	sleep 1
+	if [[ $DORMIR ]]; then sleep $TESPERA; fi
 done
