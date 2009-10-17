@@ -35,7 +35,7 @@ contar_instancias() {
 # Funciona para validar los nombres de archivos de entrada
 # Uso: validar_nombre archivo
 validar_nombre() {
-	
+	:
 }
 
 if [ ! $ENTORNO_INICIALIZADO ]; then
