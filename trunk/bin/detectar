@@ -4,7 +4,13 @@ ENOENTORNO=14
 ENODATADIR=15
 ENODIR=16
 
-DATADIR=./data # TODO Temporario para pruebas: ¿DATADIR debe ser parte del entorno?
+############################################
+# TODO Provisorio, esto es parte del entorno
+TESPERA=1
+PSTAB="../p-s.tab"
+############################################
+
+DATADIR=../data # TODO Provisorio para pruebas: ¿DATADIR debe ser parte del entorno?
 TABLA="$GRUPO/conf/p-s.tab"	# Tabla de Paises y Sistemas
 DIROK="$DATADIR/ok"
 DIRNOK="$DATADIR/nok"
@@ -32,10 +38,33 @@ contar_instancias() {
 	if [ "$1" = $DETECTAR ]; then (( CANTINST -= 1 )); fi
 }
 
-# Funciona para validar los nombres de archivos de entrada
+# Funcion para leer la tabla de archivos y sistemas
+leer_paises_y_sistemas() {
+	
+	LINEAS=$(wc -l <$PSTAB)
+	CUENTA=0
+	# Se lee una linea de la tabla en cada elemento del array LINEAS
+	{
+	while [ $CUENTA -lt $LINEAS ]
+	do
+		read LINEA[$CUENTA]
+		echo "${LINEA[$CUENTA]}"
+		(( CUENTA += 1 ))
+	done
+	} < $PSTAB
+	
+	# TODO Se procesa cada linea y se extraen pares Pais-Sistema
+}
+
+# Funcion para validar los nombres de archivos de entrada
 # Uso: validar_nombre archivo
 validar_nombre() {
-	:
+	if [ -z $1 ]; then
+		return
+	fi
+	
+	# TODO Se verifica que el pais y el sistema sean validos
+	# TODO Se verifica la validez de anio y mes
 }
 
 if [ ! $ENTORNO_INICIALIZADO ]; then
@@ -92,14 +121,14 @@ do
 	for ARCHIVO in ${ARCHIVOS[*]}
 	do
 		# No se procesan directorios
-		if [ -d $ARCHIVO ]; then continue; fi
+		if [ -d "$DATADIR/$ARCHIVO" ]; then continue; fi
 		
 		echo "Archivo procesado: $ARCHIVO"
 		if validar_nombre $ARCHIVO; then
-			mover $ARCHIVO $DIROK $DETECTAR
+			mover "$DATADIR/$ARCHIVO" $DIROK $DETECTAR
 			imprimir "Recibido: $ARCHIVO"
 		else
-			mover $ARCHIVO $DIRNOK $DETECTAR
+			mover "$DATADIR/$ARCHIVO" $DIRNOK $DETECTAR
 			imprimir "Rechazado: $ARCHIVO"
 		fi
 	done
