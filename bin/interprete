@@ -1,0 +1,124 @@
+#! /bin/bash 
+
+ENOENTORNO=14
+ENODATADIR=15
+ENODIR=16
+GRUPO=..
+
+DATADIR=../data # TODO Provisorio para pruebas: ¿DATADIR debe ser parte del entorno?
+T1="$GRUPO/conf/T1.tab"	# Tabla de Separadores
+T2="$GRUPO/conf/T2.tab" #Tabla de Campos
+DIROK="$DATADIR/ok"
+DIRNOK="$DATADIR/nok"
+CONTRATOS="$DATADIR/new/CONTRAT"
+DIROLD="$DATADIR/old"
+
+INTERPRETE=$(basename $0)
+
+# Funcion para imprimir por consola y al log
+# Uso: imprimir mensaje [tipo]
+imprimir() {
+	echo $1
+	glog $INTERPRETE $2 "$1"
+}
+
+# Funcion para contar las instancias de un proceso dado su nombre
+# Uso: contar_instancias proceso
+# Almacena la cantidad contada en CANTINST
+contar_instancias() {
+	if [ -z $1 ]; then
+		return
+	fi
+	
+	# De los procesos existentes, se cuentan las instancias del buscado
+	CANTINST=$(ps -e | grep "$1" | wc -l)
+	# Debe restarse uno porque el subshell abierto incrementa la cantidad de instancias
+	if [ "$1" = $INTERPRETE ]; then (( CANTINST -= 1 )); fi
+}
+
+# Funcion para validar que no haya archivos que se procesen dos veces, para eso mira dentro de DIROLD archivo por archivo y compara contenidos
+# Uso: validar_repetido archivo
+validar_repetido(){		
+	if [ -z $1 ]; then
+		return
+	fi
+	
+	LISTAOLD=$(ls -1 $DIROLD)
+	ARCHIVOSOLD=( $LISTAOLD ) # Array que contiene cada linea de la lista como un elemento
+	for ARCHIVOOLD in ${ARCHIVOSOLD[*]}
+	do
+		# No se procesan directorios
+		if [ -d "$DIROLD/$ARCHIVOOLD" ]; then continue; fi
+
+		# Si son el mismo archivo entonces se devuelve true		
+		if [ $(cmp "$DIROLD/$ARCHIVOOLD" "$1"| wc -l) = 0 ]; then
+			true
+			return
+		fi
+
+	done
+	false
+	
+}
+
+# Obtiene los datos del archivo con el que se trabaja a partir de su nombre
+# Uso: datos_nombre nombrearchivo
+# Almacena el pais en PAIS, el sistema en SISTEMA el anio en ANIO y el mes en MES
+datos_nombre(){
+
+	PAIS=$(expr "$1" : '\([^-]*\)')
+	SISTEMA=$(expr "$1" : '[^-]*-\([^-]*\)')
+	ANIO=$(expr "$1" : '[^-]*-[^-]*-\([^-]*\)')
+	MES=$(expr "$1" : '.*-\(.*\)')
+
+}
+
+# Obtiene los separadores a partir del pais y del sistema
+# Uso: determinar_separadores
+# Almacena el separador de campo en SEPCAMPO y el separador decimal en SEPDECIMAL
+determinar_separadores(){
+	SEPCAMPO= grep "$PAIS-$SISTEMA" $T1| cut -d '-' -f 3 )
+	SEPDECIMAL= grep "$PAIS-$SISTEMA" $T1| cut -d '-' -f 4
+	echo $SEPCAMPO
+	echo $SEPDECIMAL
+}
+
+# Solo se permite una instancia activa de este script.
+contar_instancias $INTERPRETE
+if [ $CANTINST -gt 1 ]; then 
+	imprimir "Interprete ya esta corriendo" W
+	exit 0
+fi
+
+imprimir "Interprete iniciado" I
+
+# Valida que el ambiente este inicializado.
+if [ ! $ENTORNO_INICIALIZADO ]; then
+	echo "Interprete: Entorno no inicializado"
+	exit $ENOENTORNO
+fi
+
+#Cuenta la cantidad de archivos
+CANTARCH=$(ls $DIROK| wc -l)
+imprimir "Inicio de Interprete, Cantidad de Archivos: $CANTARCH" I
+
+
+LISTAOK=$(ls -1 $DIROK)
+ARCHIVOSOK=( $LISTAOK ) # Array que contiene cada linea de la lista como un elemento
+# Para cada elemento del directorio se realiza el procesamiento necesario
+for ARCHIVOOK in ${ARCHIVOSOK[*]}
+do
+	# No se procesan directorios
+	if [ -d "$DIROK/$ARCHIVOOK" ]; then continue; fi
+	
+	# Si el archivo ya se proceso entonces se pasa al directorio nok, sino se trabaja con el mismo	
+	if validar_repetido $DIROK/$ARCHIVOOK; then
+		mover "$DIROK/$ARCHIVOOK" $DIRNOK $INTERPRETE
+		imprimir "Duplicado: $ARCHIVOOK" I
+	else
+		datos_nombre $ARCHIVOOK
+		determinar_separadores 
+		#mover "$DIROK/$ARCHIVOOK" $DIROLD $INTERPRETE
+	fi
+done
+
