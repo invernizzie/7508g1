@@ -7,13 +7,14 @@ ENODIR=16
 ############################################
 # TODO Provisorio, esto es parte del entorno
 TESPERA=1
-PSTAB="../p-s.tab"
+DATADIR=../data
+CANLOOP=10
+GRUPO=..
 ############################################
 
-DATADIR=../data # TODO Provisorio para pruebas: ¿DATADIR debe ser parte del entorno?
-TABLA="$GRUPO/conf/p-s.tab"	# Tabla de Paises y Sistemas
-DIROK="$DATADIR/ok"
-DIRNOK="$DATADIR/nok"
+PSTAB="$GRUPO/conf/p-s.tab"	# Tabla de Paises y Sistemas
+DIROK="$DATADIR/ok"		# Directorio de aceptados
+DIRNOK="$DATADIR/nok"		# Directorio de rechazados
 
 DETECTAR=$(basename $0)
 
@@ -41,30 +42,74 @@ contar_instancias() {
 # Funcion para leer la tabla de archivos y sistemas
 leer_paises_y_sistemas() {
 	
-	LINEAS=$(wc -l <$PSTAB)
+	REGISTROS=$(wc -l <$PSTAB)
 	CUENTA=0
-	# Se lee una linea de la tabla en cada elemento del array LINEAS
+	# Se procesa cada linea de la tabla
 	{
-	while [ $CUENTA -lt $LINEAS ]
+	while [ $CUENTA -lt $REGISTROS ]
 	do
-		read LINEA[$CUENTA]
-		echo "${LINEA[$CUENTA]}"
+		# Se lee un registro de la tabla
+		read LINEA
+		# Si la linea esta vacia o comentada se saltea
+		if [ ${#LINEA} -lt 1 -o "${LINEA:0:1}" = "#" ]; then
+			(( REGISTROS -= 1 ))
+			continue
+		fi
+		
+		# Se extrae el codigo de pais
+		PAISES[$CUENTA]=$(expr "$LINEA" : '\([^-]*\)')
+		# Se extrae el codigo de sistema
+		SISTEMAS[$CUENTA]=$(expr "$LINEA" : '[^-]*-[^-]*-\([^-]\)')
+		
 		(( CUENTA += 1 ))
 	done
 	} < $PSTAB
-	
-	# TODO Se procesa cada linea y se extraen pares Pais-Sistema
 }
 
 # Funcion para validar los nombres de archivos de entrada
 # Uso: validar_nombre archivo
+# Formato de nombre de archivo: <pais>-<sistema>-<anio>-<mes>
 validar_nombre() {
 	if [ -z $1 ]; then
 		return
 	fi
 	
-	# TODO Se verifica que el pais y el sistema sean validos
-	# TODO Se verifica la validez de anio y mes
+	PAIS=$(expr "$1" : '\([^-]*\)')
+	SISTEMA=$(expr "$1" : '[^-]*-\([^-]*\)')
+	ANIO=$(expr "$1" : '[^-]*-[^-]*-\([^-]*\)')
+	MES=$(expr "$1" : '.*-\(.*\)')
+
+	# Se comprueba la validez del anio
+	ANIOACTUAL="$(date +%Y)"
+	MESTOPE=12
+	if [ "$ANIO" -lt 2000 -o "$ANIO" -gt "$ANIOACTUAL" ]; then
+		false
+		return
+	fi
+	# Si el anio es el actual, el mes tope es el actual
+	if [ "$ANIO" -eq "$ANIOACTUAL" ]; then
+		MESTOPE=$(date +%m)
+	fi
+	# Se comprueba la validez del mes
+	if [ "$MES" -lt 1 -o "$MES" -gt "$MESTOPE" ]; then
+		false
+		return
+	fi
+	
+	# Se verifica que el pais y el sistema sean validos
+	CUENTA=0
+	while [ $CUENTA -lt $REGISTROS ]
+	do
+		# Si existe el par Pais-Sistema, el archivo es valido
+		if [ "$PAIS" = "${PAISES[$CUENTA]}" \
+			-a "$SISTEMA" = "${SISTEMAS[$CUENTA]}" ]; then
+			true
+			return
+		fi
+		(( CUENTA += 1 ))
+	done
+	
+	false
 }
 
 if [ ! $ENTORNO_INICIALIZADO ]; then
@@ -106,7 +151,10 @@ if [ ! -d $DIRNOK ]; then
 fi
 
 CICLOS=0
-CANLOOP=3 # TODO Borrar, usado para pruebas
+
+# Se lee por unica vez la tabla de paises y sistemas,
+#+por lo tanto no puede cambiar durante la ejecucion
+leer_paises_y_sistemas
 
 # Bucle principal del demonio
 while [ 1 ]
@@ -123,7 +171,7 @@ do
 		# No se procesan directorios
 		if [ -d "$DATADIR/$ARCHIVO" ]; then continue; fi
 		
-		echo "Archivo procesado: $ARCHIVO"
+		# Segun la validez del nombre, se acepta o rechaza el archivo	
 		if validar_nombre $ARCHIVO; then
 			mover "$DATADIR/$ARCHIVO" $DIROK $DETECTAR
 			imprimir "Recibido: $ARCHIVO"
@@ -144,6 +192,7 @@ do
 		# Solo puede correr una instancia del interprete
 		contar_instancias "interprete"
 		if [ $CANTINST -lt 1 ]; then
+			# TODO ¿Debe invocarse con algun parametro en particular?
 			interprete&
 			# TODO ¿Como saber si arranco bien para hacer lo que pide el enunciado?
 		fi
