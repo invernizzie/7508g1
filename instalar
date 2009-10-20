@@ -1,0 +1,108 @@
+#!/bin/bash
+
+# Instalador del Trabajo Practico de Sistemas Operativos
+# 
+# Se presupone que junto con este archivo, estan descomprimidos
+# Los archivos que corresponden a los comandos, se encuentran en
+# la carpeta ./inst/bin. Se asume que se intenta instalar todos los
+# comandos que se encuentran creados alli.
+
+
+# Esta funcion determina si existe un componente en el arreglo de componentes
+# instalados.
+function elementExists() 
+{
+	if [ -z "$1" ]; then
+		echo "0"
+		return 1
+	fi
+
+	for (( i=0; i<${#listaComponentesInstalados[@]}; i++));
+	do
+		if [ ${listaComponentesInstalados[i]} == $1 ]; then
+			echo $i
+			return 0
+		fi
+	done
+
+	echo "0"
+	return 1
+}
+
+# Defino la variable en la que se va a almacena el directorio
+# de instalacion y ejecutacion
+$grupo="./grupo01"
+
+# Defino la variable en la que almaceno la ubicacion del archivo de logs
+# para la instalacion
+$LOGINSTALL="$grupo/log/instalar.log"
+
+# Registro el inicio de la instalacion
+echo "Inicio de instalacion" >> $LOGINSTALL
+
+# Muestro y grabo la ubicacion del archivo de logs
+echo "Log de la instalacion: $LOGINSTALL" | tee $LOGINSTALL
+
+# Muestro y grabo la ubicacion del directorio de instalacion
+echo "Directorio de instalacion: $grupo/inst" | tee $LOGINSTALL
+
+# Muestro y grabo la ubicacion del directorio de los parametros de configuracion
+echo "Directorio de instalacion: $grupo/conf" | tee $LOGINSTALL
+
+$CONFFILE="$grupo/conf/practico.conf"
+# Se detecta si alguno de los componentes o ninguno ha sido instalado
+if [ -e $CONFFILE]; then
+
+# Al encontrar el archivo, busco los componentes que se encuentran instalados.
+# Se arma una lista con todos los componentes a instalar a partir de lo que se
+# encuentra en el directorio de instalacion y se hace una comparacion para determinar
+# los faltantes.
+
+# Construyo la lista de los componentes que tengo que instalar
+listaComponentesInstalar=( $(ls "$grupo/inst/bin") )
+
+# Construyo una lista con los mismos componentes, pero que va a tener
+# la lista final de componentes a instalar
+listaComponentesInstalarFinal= $( echo ${listaComponentesInstalar[@]} )
+
+# Construyo la lista de los componentes que tengo instalados, y otras dos
+# con los datos que tengo que mostrar.
+grep -e COMAND -e USERID -e FECINS $CONNFILE > "$CONNFILE.temp"
+listaComponentesInstalados=( $(grep "COMAND =" "$CONNFILE.temp" | sed 's/COMAND =//g') )
+listaUsuariosInstalados=( $(grep "USERID =" "$CONNFILE.temp" | sed 's/USERID =//g') )
+listaFechasInstalados=( $(grep "FECINS =" "$CONNFILE.temp" | sed 's/FECINS =//g') )
+
+
+
+# Determino y muestro la lista de componentes instalados. Recorro la
+# lista de los componentes que tengo que instalar, y chequeo si se
+# encuentran instalados. En ese caso, muestro su informacion
+for componente in ${listaComponentesInstalar[@]}
+do
+
+	comparacion=$(elementExists $componente)
+	if [ $comparacion != "0" ]; then
+		unset ${listaComponentesInstalarFinal[$comparacion]}
+		echo "Comando $componente instalado el ${listaFechasInstalados[$comparacion]} por ${listaUsuariosInstalados[$comparacion]}"
+	fi
+done
+
+# Me fijo si hay que instalar algun componente. En caso de que no haya componentes
+# para instalar, salgo de la instalacion
+if [ ${#listaComponentesInstalarFinal[@]} -eq 0 ]; then
+	echo 	"Todos los componentes necesarios, se encuentran instalados.
+		la instalacion finalizara"
+	return 0
+fi
+
+# Muestro la lista de componentes que se instalaran, en caso de que
+# los existentes no sean instalados.
+unset $componente
+echo "Componentes a instalar"
+for componente in ${listaComponentesInstalarFinal[@]}
+	echo $componente
+done
+
+
+
+
