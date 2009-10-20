@@ -31,11 +31,11 @@ function elementExists()
 
 # Defino la variable en la que se va a almacena el directorio
 # de instalacion y ejecutacion
-$grupo="./grupo01"
+grupo="./grupo01"
 
 # Defino la variable en la que almaceno la ubicacion del archivo de logs
 # para la instalacion
-$LOGINSTALL="$grupo/log/instalar.log"
+LOGINSTALL="$grupo/log/instalar.log"
 
 # Registro el inicio de la instalacion
 echo "Inicio de instalacion" >> $LOGINSTALL
@@ -49,7 +49,7 @@ echo "Directorio de instalacion: $grupo/inst" | tee $LOGINSTALL
 # Muestro y grabo la ubicacion del directorio de los parametros de configuracion
 echo "Directorio de instalacion: $grupo/conf" | tee $LOGINSTALL
 
-$CONFFILE="$grupo/conf/practico.conf"
+CONFFILE="$grupo/conf/practico.conf"
 # Se detecta si alguno de los componentes o ninguno ha sido instalado
 if [ -e $CONFFILE]; then
 
@@ -103,6 +103,16 @@ for componente in ${listaComponentesInstalarFinal[@]}
 	echo $componente
 done
 
+# Me fijo la version de PERL. Para que sea valido, tiene que ser mayor que la 5.
+# Para simplificar, uso el valor de la revision para comparar y almaceno la version
 
+version=$( perl -V:revision | cut -f2 -d"'" )
+ERRORPERL=1
+LEASTVERSION=5
+if [ $version -lt $LEASTVERSION]; then
+	echo "Atencion! Esta instalacion solo puede ejecutada si Perl 5 o superior esta instalado.\n	Efectúe la instalación de Perl y reinicie el proceso de instalación." | tee $LOGINSTALL
+	return $ERRORPERL
+fi
+	
 
 
