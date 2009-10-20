@@ -3,7 +3,11 @@
 ENOENTORNO=14
 ENODATADIR=15
 ENODIR=16
+ENOFORMATO=17
 GRUPO=..
+
+#HIPOTESIS
+# Cuando valida que no haya archivos repetidos valida que los nombres no sean iguales y los contenidos tampoco.
 
 DATADIR=../data # TODO Provisorio para pruebas: ¿DATADIR debe ser parte del entorno?
 T1="$GRUPO/conf/T1.tab"	# Tabla de Separadores
@@ -60,27 +64,129 @@ validar_repetido(){
 	false
 	
 }
-
-# Obtiene los datos del archivo con el que se trabaja a partir de su nombre
-# Uso: datos_nombre nombrearchivo
-# Almacena el pais en PAIS, el sistema en SISTEMA el anio en ANIO y el mes en MES
-datos_nombre(){
-
+# A partir del nombre del archivo obtiene el pais, el sistema, el anio y el mes y con eso puede determinar los separadaores
+# Uso: obtener_pais_sistema_anio_mes nombrearchivo
+# Almacena el pais en PAIS, el sistema en SISTEMA el anio en ANIO y el mes en MES, el separador de campo en SEPCAMPO y el separador decimal en SEPDECIMAL
+obtener_pais_sistema_anio_mes(){
 	PAIS=$(expr "$1" : '\([^-]*\)')
 	SISTEMA=$(expr "$1" : '[^-]*-\([^-]*\)')
 	ANIO=$(expr "$1" : '[^-]*-[^-]*-\([^-]*\)')
 	MES=$(expr "$1" : '.*-\(.*\)')
-
 }
 
-# Obtiene los separadores a partir del pais y del sistema
+# Obtiene los separadores para luego poder trabajar.
 # Uso: determinar_separadores
 # Almacena el separador de campo en SEPCAMPO y el separador decimal en SEPDECIMAL
 determinar_separadores(){
-	SEPCAMPO= grep "$PAIS-$SISTEMA" $T1| cut -d '-' -f 3 )
-	SEPDECIMAL= grep "$PAIS-$SISTEMA" $T1| cut -d '-' -f 4
-	echo $SEPCAMPO
-	echo $SEPDECIMAL
+	SEPCAMPO=$(grep "$PAIS-$SISTEMA" $T1| cut -d '-' -f 3) 
+	SEPDECIMAL=$(grep "$PAIS-$SISTEMA" $T1| cut -d '-' -f 4)
+}
+
+# Obtiene los formatos y las posiciones de los campos para luego poder trabajar.
+# Uso: determinar_campos
+# Almacena cada posicion en NOMBRECAMPOP y cada formato en NOMBRECAMPOF
+determinar_campos(){
+	
+	# Fecha del contrato.
+	DT_FLUXP=$( grep "$PAIS-$SISTEMA-DT_FLUX-.*-1$" $T2| cut -d '-' -f 4 )
+	DT_FLUXF=$( grep "$PAIS-$SISTEMA-DT_FLUX-.*-1$" $T2| cut -d '-' -f 5 )
+
+	# Estado contable.
+	CD_STATCTBP=$( grep "$PAIS-$SISTEMA-CD_STATCTB-.*-1$" $T2| cut -d '-' -f 4 )
+	CD_STATCTBF=$( grep "$PAIS-$SISTEMA-CD_STATCTB-.*-1$" $T2| cut -d '-' -f 5 )
+
+	# Numero de contrato.
+	NO_CONTRATP=$( grep "$PAIS-$SISTEMA-NO_CONTRAT-.*-1$" $T2| cut -d '-' -f 4 )
+	NO_CONTRATF=$( grep "$PAIS-$SISTEMA-NO_CONTRAT-.*-1$" $T2| cut -d '-' -f 5 )
+
+	# Monto impago.
+	MT_IMPAGOP=$( grep "$PAIS-$SISTEMA-MT_IMPAGO-.*-1$" $T2| cut -d '-' -f 4 )
+	MT_IMPAGOF=$( grep "$PAIS-$SISTEMA-MT_IMPAGO-.*-1$" $T2| cut -d '-' -f 5 )
+
+	# Monto del credito.
+	MT_CRDP=$( grep "$PAIS-$SISTEMA-MT_CRD-.*-1$" $T2| cut -d '-' -f 4 )
+	MT_CRDF=$( grep "$PAIS-$SISTEMA-MT_CRD-.*-1$" $T2| cut -d '-' -f 5 )
+
+	# Otras sumas del cliente.
+	MT_OTRSUMDCP=$( grep "$PAIS-$SISTEMA-MT_OTRSUMDC-.*-1$" $T2| cut -d '-' -f 4 )
+	MT_OTRSUMDCF=$( grep "$PAIS-$SISTEMA-MT_OTRSUMDC-.*-1$" $T2| cut -d '-' -f 5 )
+
+	# Monto de interes devengado.
+	MT_INDEP=$( grep "$PAIS-$SISTEMA-MT_INDE-.*-1$" $T2| cut -d '-' -f 4 )
+	MT_INDEF=$( grep "$PAIS-$SISTEMA-MT_INDE-.*-1$" $T2| cut -d '-' -f 5 )
+
+	# Monto de interes no devengado.
+	MT_INNODEP=$( grep "$PAIS-$SISTEMA-MT_INNODE-.*-1$" $T2| cut -d '-' -f 4 )
+	MT_INNODEF=$( grep "$PAIS-$SISTEMA-MT_INNODE-.*-1$" $T2| cut -d '-' -f 5 )
+
+}
+
+
+# Lee las fechas y las transforma en el formato requerido
+# Uso: transformar_fecha linea
+# Deja la fecha del contrato en DT_FLUX
+transformar_fecha(){
+	
+	# Lee la fecha de la linea extraida	
+	DT_FLUXL=$( echo $1| cut -d $SEPCAMPO -f $DT_FLUXP)	
+	
+	# Separo segun la convencion dada
+	# Los primeros 6 caracteres son el formato en si
+	FORMATO_FECHA=$( echo $DT_FLUXF| cut --characters=1-6)
+	# El ultimo caracter es la longitud
+	LONGITUD_FECHA=$( echo $DT_FLUXF| cut --characters=7)
+	
+	# Valida que no se exceda ni se tenga menor longitud que la pedida, si es asi termina la ejecucion con un error de formato
+	if [ $LONGITUD_FECHA -ne ${#DT_FLUXL} ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+	
+	# Transforma la fecha al formato correspondiente
+	if [ "$FORMATO_FECHA" = "ddmmyy" ] ; then
+		if [ $LONGITUD_FECHA = 8 ]; then
+			DT_FLUX="$( echo $DT_FLUXL| cut --characters=1-2)/$( echo $DT_FLUXL| cut --characters=3-4)/$( echo $DT_FLUXL| cut --characters=5-8)"
+		else
+			DT_FLUX="$( echo $DT_FLUXL| cut --characters=1-2)/$( echo $DT_FLUXL| cut --characters=4-5)/$( echo $DT_FLUXL| cut --characters=7-10)";		
+		fi	
+	else
+		if [ $LONGITUD_FECHA = 8 ]; then
+			DT_FLUX="$( echo $DT_FLUXL| cut --characters=7-8)/$( echo $DT_FLUXL| cut --characters=5-6)/$( echo $DT_FLUXL| cut --characters=1-4)"
+		else
+			DT_FLUX="$( echo $DT_FLUXL| cut --characters=9-10)/$( echo $DT_FLUXL| cut --characters=6-7)/$( echo $DT_FLUXL| cut --characters=1-4)"
+		fi
+	fi
+}
+
+# Lee los alfanumericos y los transforma en el formato requerido
+# Uso: transformar_alfanumericos
+#transformar_alfanumericos(){}
+
+# Lee los numericos y los transforma en el formato requerido
+# Uso: determinar_campos
+#transformar_numericos(){}
+
+procesar(){
+	REGISTROS=$(wc -l <$1)	
+	CUENTA=0
+	# Se procesa cada linea de la tabla
+	{
+	while [ $CUENTA -lt $REGISTROS ]
+	do
+		# Se lee un registro de la tabla
+		read LINEA
+		# Si la linea esta vacia o comentada se saltea
+		if [ ${#LINEA} -lt 1 -o "${LINEA:0:1}" = "#" ]; then
+			(( REGISTROS -= 1 ))
+			continue
+		fi
+				
+		transformar_fecha $LINEA
+		
+		(( CUENTA += 1 ))
+		
+	done
+	} < $1
 }
 
 # Solo se permite una instancia activa de este script.
@@ -116,8 +222,10 @@ do
 		mover "$DIROK/$ARCHIVOOK" $DIRNOK $INTERPRETE
 		imprimir "Duplicado: $ARCHIVOOK" I
 	else
-		datos_nombre $ARCHIVOOK
-		determinar_separadores 
+		obtener_pais_sistema_anio_mes $ARCHIVOOK		
+		determinar_separadores
+		determinar_campos
+		procesar $DIROK/$ARCHIVOOK
 		#mover "$DIROK/$ARCHIVOOK" $DIROLD $INTERPRETE
 	fi
 done
