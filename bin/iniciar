@@ -1,22 +1,118 @@
 #! /bin/bash 
 
+INICIAR=$(basename iniciar)
+echo \$INICIAR=$INICIAR
+export INICIAR
 
+ENOENTORNO=14
+ENOINSTALADO=15
+
+# Funcion para imprimir por consola y al log
+# Uso: imprimir mensaje [tipo]
+imprimir() {
+	echo $1
+	if [ $ENTORNO_INICIALIZADO ]; then
+		glog "$INICIAR" $2 "$1"
+	fi
+}
+
+# El entorno puede inicializarse una sola vez en cada sesion de bash
 if [ $ENTORNO_INICIALIZADO ]; then
-	echo "Entorno ya inicializado"
-	glog iniciar E "Entorno ya inicializado" 
-else
-	# TODO Leer las variables de un archivo de configuracion.
 
-	# TODO Debe usarse otro path ya que puede invocarse el comando desde otro directorio
-	export PATH=$PATH:.
-	export LOGDIR=../log
-	export MAXLOG=1024
-	export CANLOOP=100
-	export ENTORNO_INICIALIZADO=1
-
-	# Corre detectar en modo background.
-	detectar &
-
-	echo "Entorno inicializado correctamente"
-	glog iniciar I "Entorno inicializado correctamente"
+	imprimir "Invocacion con el entorno ya inicializado" W
+	
+	# TODO Mostrar los valores de las variables de entorno
+	
+	# Se muestra el PID de detectar, si es que esta corriendo
+	DETPID=$(expr "$(ps | grep detectar)" : '\ \([^\ ]*\)\ .*')
+	if [ ! -z "$DETPID" ]; then
+		echo "PID de detectar: $DETPID"
+	fi
+	
+	return $ENOENTORNO
 fi
+
+# TODO Ejecutando ". iniciar" no funciona, ¿deben leerse de practico.conf?
+# Se obtiene el nombre del directorio del grupo. Este sera
+#+siempre el padre de bin, el directorio del presente script
+export GRUPO=$(cd $(dirname iniciar)/..; pwd)
+# Se agrega el directorio bin al PATH para poder ejecutar las demas funciones
+export BINDIR=$GRUPO/bin
+export PATH=$PATH:$BINDIR
+# Se exportan estas variables para poder invocar a glog
+export LOGDIR=$GRUPO/log
+export ENTORNO_INICIALIZADO=1
+export MAXLOG=1024
+
+imprimir "Inicializando entorno"
+
+# Se verifica la instalacion: presencia de tablas y ejecutables
+# Array de nombres de archivos indispensables. Ejecutables:
+NECESARIOS[0]="$GRUPO/bin/mover"
+NECESARIOS[1]="$GRUPO/bin/glog"
+NECESARIOS[2]="$GRUPO/bin/vlog"
+NECESARIOS[3]="$GRUPO/bin/iniciar"
+NECESARIOS[4]="$GRUPO/bin/detectar"
+NECESARIOS[5]="$GRUPO/bin/interprete"
+NECESARIOS[6]="$GRUPO/bin/reporte"
+# Tablas y configuracion:
+NECESARIOS[7]="$GRUPO/conf/p-s.tab"
+NECESARIOS[8]="$GRUPO/conf/T1.tab"
+NECESARIOS[9]="$GRUPO/conf/T2.tab"
+NECESARIOS[10]="$GRUPO/conf/practico.conf"
+
+CONTADOR=0
+while [ "$CONTADOR" -le 10 ]
+do
+	if [ ! -e "${NECESARIOS[$CONTADOR]}" ]; then
+		imprimir "El archivo indispensable ${NECESARIOS[$CONTADOR]} no esta presente" SE
+		NOINST=1
+	fi
+	(( CONTADOR += 1 ))
+done
+if [ $NOINST ]; then
+	imprimir "Imposible iniciar el entorno: Instalacion fallida o corrupta" SE
+	unset ENTORNO_INICIALIZADO
+	# TODO Los exit cierran la consola al ejecutar como ". iniciar", ¿como puede solucionarse?
+	return $ENOINSTALADO
+fi
+
+
+
+# Se solicita por pantalla la cantidad de ciclos de detectar
+while [[ "$CANLOOP" -lt 1 ]] 2>/dev/null
+do
+	echo -n "Cantidad de Ciclos de DETECTAR? (100 ciclos) "
+	read CANLOOP
+	
+	if [ ${#CANLOOP} -eq 0 ]; then
+		CANLOOP=100
+	fi
+	
+	# Workaround para obligar a que sea un entero
+	let CANLOOP="$CANLOOP"*1 2>/dev/null
+done
+
+# Se solicita por pantalla el tiempo de espera por ciclo de detectar
+while [[ "$TESPERA" -lt 1 ]] 2>/dev/null
+do
+	echo -n "Tiempo de espera entre ciclos? (1 minuto) "
+	read TESPERA
+	
+	if [ ${#TESPERA} -eq 0 ]; then
+		TESPERA=1
+	fi
+	
+	# Workaround para obligar a que sea un entero
+	let TESPERA="$TESPERA"*1 2>/dev/null
+done
+
+export CANLOOP
+export TESPERA
+
+# TODO Preguntar si se quiere correr detectar,
+#+caso negativo explicar la invocacion manual
+# Corre detectar en modo background.
+detectar &
+
+imprimir "Entorno inicializado correctamente"

@@ -22,7 +22,7 @@ DETECTAR=$(basename $0)
 # Uso: imprimir mensaje [tipo]
 imprimir() {
 	echo $1
-	glog $DETECTAR $2 "$1"
+	glog "$DETECTAR" $2 "$1"
 }
 
 # Funcion para contar las instancias de un proceso dado su nombre
