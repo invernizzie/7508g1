@@ -8,7 +8,7 @@ sub validacionNula{
 }
 
 # TODO
-sub validarPais{
+sub validarPais {
   
   my $pais = @_[0];
   return $pais;
@@ -34,10 +34,10 @@ sub validarMes{
   return $mes >= 1 && $mes <= 12 ? $mes : "";
 }
 
+
 sub cargaParametro{
 
-  my $parametro = @_[0];
-  my $validacion=@_[1];
+  my ($parametro, $validacion) = @_;
   my $respuesta;
 
   while (!$respuesta){
@@ -47,17 +47,17 @@ sub cargaParametro{
     chop($respuesta);
     $respuesta = &$validacion($respuesta);
     if (!$respuesta) {
-	print "    El $parametro es invalido =(\n";
+	    print "    El $parametro es invalido =(\n";
     }
   }
   return $respuesta;
 }
 
+
 # Permite la carga de parametros opcionales como el sistema, anio y mes.
 sub cargaParametroOpcional{
   
-  my $parametro = @_[0];
-  my $validacion = @_[1];  
+  my ($parametro, $validacion) = @_;
   my $opcion;
   my $respuesta;
   
@@ -75,7 +75,8 @@ sub cargaParametroOpcional{
   return &cargaParametro($parametro,$validacion);
 }
 
-# Cargar parametros de consulta (Pais,Sistema, Anio y Mes)
+
+# Cargar parametros de consulta (Pais, Sistema, Anio y Mes)
 sub cargarParametrosDeConsulta{
 
   my $pais = &cargaParametro("pais","validarPais");
@@ -87,68 +88,52 @@ sub cargarParametrosDeConsulta{
     $mes = &cargaParametroOpcional("mes", "validarMes");
   }
   
-  @_[0] = $pais;
-  @_[1] = $sistema;
-  @_[2] = $anio;
-  @_[3] = $mes;  
+  return $pais, $sistema, $anio, $mes;
 }
 
+
+# Filtra el archivo maestro a partir de los parámetros de consulta (pais, 
+# sistema, año y mes) y retorna un hash con los contratos filtrados, de la 
+# forma: clave = número de contrato, valor = <estado>-<monto>
 sub filtrarArchivoMaestro{
 
-  my @registro;  
+  my ($filtroPais, $filtroSistema, $filtroAnio, $filtroMes) = @_;
+
+  # Nombre del archivo maestro. TODO que sea $ENV{"GRUPO"}."/loquesea/PPI.mae"
   my $fileName = "PPI.mae";
-  my $monto;  
-  my $nContrato;
-  my $estado;
+
+  # Hash con registros filtrados del archivo maestro PPI.
   my %ppiFiltrado;
-  my $pais;
-  my $sistema;
-  my $mes;
-  my $anio;
 
-  my $filtroPais = @_[0];
-  my $filtroSistema = @_[1];
-  my $filtroAnio = @_[2];
-  my $filtroMes = @_[3];
-  
-  open(PPI,$fileName);
+  # TODO Usar glog?
+  open(PPI,$fileName) || die ("No se pudo abrir $filename\n");
 
+  my $linea;
   while ($linea = <PPI>){
    
     chomp($linea);
-    @registro = split("-",$linea);
-    $pais = $registro[0];
-    $sistema = $registro[1];
-    $anio = $registro[2];
-    $mes = $registro[3];
+    my @registro = split("-",$linea);
+    my ($pais, $sistema, $anio, $mes) = @registro[0..3];
     
-    #@valor = ($pais, $sistema, $anio, $mes, $estado, $monto);
-    #push(@maestro,join("-", @valor));
-
     # Filtros!
-    if (!$filtroPais || $pais eq $filtroPais) {
-      if (!$filtroSistema || $sistema eq $filtroSistema) {
-        if (!$filtroAnio || $anio eq $filtroAnio) {
-	  if (!$filtroMes || $mes eq $filtroMes) {
-	    # El registro pasa todos los filtros!
-	    $estado = $registro[6];
-	    $nContrato = $registro[7];
-	    # MT_RESTANTE = MT_CRD + MT_IMPAGO + MT_INDE - MT_OTRSUMDC
-	    $monto = $registro[10] + $registro[11] + $registro[13] - $registro[14];
+    if ( (!$filtroPais    || $pais eq $filtroPais)       &&
+         (!$filtroSistema || $sistema eq $filtroSistema) &&
+         (!$filtroAnio    || $anio eq $filtroAnio)       &&
+         (!$filtroMes     || $mes eq $filtroMes)            ) {
 
-	    $ppiFiltrado{$nContrato} = $estado."-".$monto;
-	    print "exito ".$ppiFiltrado{$nContrato}."\n";
-          }
-        }
-      }
+      # El registro pasa todos los filtros!
+      my ($estado, $nContrato) = @registro[6,7];
+
+      # Calcula el monto restante.
+      my ($MT_CRD, $MT_IMPAGO, $MT_INDE, $MT_OTRSUMDC) = @registro[10,11,13,14];
+      my $monto = $MT_CRD + $MT_IMPAGO + $MT_INDE - $MT_OTRSUMDC;
+
+      $ppiFiltrado{$nContrato} = $estado."-".$monto;
+      #print "exito ".$ppiFiltrado{$nContrato}."\n";
     }
   }
 
   close(PPI);
-  #foreach $key (keys(%ppiFiltrado)) {
-  #  print $key."  ".$ppiFiltrado{$key}."\n";
-  #}
-
 
   return %ppiFiltrado;   
 }
@@ -156,67 +141,57 @@ sub filtrarArchivoMaestro{
 
 sub filtrarArchivoContratos{
 
-  my @registro;  
-  my $pais = @_[0];
-  my $filtroSistema = @_[1];
-  my $filtroAnio = @_[2];
-  my $filtroMes = @_[3];
+  my ($pais, $filtroSistema, $filtroAnio, $filtroMes) = @_;
+
+  # TODO Lo mismo que con el maestro.
   my $fileName = "CONTRACT.$pais";
-  my $monto;  
-  my $nContrato;
-  my $estado;
+
+  # Hash con registros filtrados del archivo de contratos.
   my %contratos;
-  
-  my $sistema;
-  my $mes;
-  my $anio;
 
-  
-  open(CONTRATOS,$fileName);
+  # TODO Usar glog?
+  open(CONTRATOS,$fileName) || die ("No se pudo abrir $filename\n");
 
+
+  my $linea;
   while ($linea = <CONTRATOS>){
    
     chomp($linea);
-    @registro = split("-",$linea);
-    $sistema = $registro[0];
-    $anio = $registro[1];
-    $mes = $registro[2];
+    my @registro = split("-",$linea);
+    my ($sistema, $anio, $mes) = @registro[0..2];
     
-    #@valor = ($pais, $sistema, $anio, $mes, $estado, $monto);
-    #push(@maestro,join("-", @valor));
-
     # Filtros!
-    if (!$filtroSistema || $sistema eq $filtroSistema) {
-      if (!$filtroAnio || $anio eq $filtroAnio) {
-	if (!$filtroMes || $mes eq $filtroMes) {
-	  # El registro pasa todos los filtros!
-	  $estado = $registro[6];
-	  $nContrato = $registro[7];
-	  # MT_RESTANTE = MT_CRD + MT_IMPAGO + MT_INDE - MT_OTRSUMDC
-	  $monto = $registro[11]; 
+    if ( (!$filtroSistema || $sistema eq $filtroSistema) &&
+         (!$filtroAnio    || $anio eq $filtroAnio)       &&
+         (!$filtroMes     || $mes eq $filtroMes)            ) {
 
-	  $ppiFiltrado{$nContrato} = $estado."-".$monto;
-	  print "exito ".$ppiFiltrado{$nContrato}."\n";
-	}
-      }
+      # El registro pasa todos los filtros!
+      my ($estado, $nContrato, $monto) = @registro[6, 7, 11];
+
+      $contratos{$nContrato} = $estado."-".$monto;
+      #print "exito ".$ppiFiltrado{$nContrato}."\n";
     }
   }
 
-  
-  #foreach $key (keys(%ppiFiltrado)) {
-  #  print $key."  ".$ppiFiltrado{$key}."\n";
-  #}
+  close (CONTRATOS);
 
-
-  return %ppiFiltrado;   
+  return %contratos;   
 }
+
 
 sub realizarConsulta{
 
-  %ppiFiltrado = &filtrarArchivoMaestro(@_);
+  my %ppiFiltrado = &filtrarArchivoMaestro(@_);
 
-  return 0;
+  print "CONSULTAAA!!\n";
+  foreach $key (keys(%ppiFiltrado)) {
+    print $key." ".$ppiFiltrado{$key}."\n";
+  }
+
+  print "Presione Enter para continuar";
+  my $enter = <STDIN>;
 }
+
 
 sub menu{
 
@@ -227,10 +202,13 @@ sub menu{
   while (!$salir){
 
     system("clear");
-    print "Paramatros actuales de consulta, Pais: $pais - Sistema: $sistema - Anio: $anio - Mes: $mes\n";
+    print "Paramatros actuales de consulta, \Pais: $pais - ".
+          "Sistema: $sistema - Anio: $anio - Mes: $mes\n";
     print "1- Cargar parametros de consulta.\n";
-    print "2- ".($grabarListados ? "Desactivar" : "Activar")." grabacion de listados de consultas.\n";
-    print "3- ".($grabarModificaciones ? "Desactivar" : "Activar")." grabacion de modificaciones de contratos.\n";
+    print "2- ".($grabarListados ? "Desactivar" : "Activar").
+          " grabacion de listados de consultas.\n";
+    print "3- ".($grabarModificaciones ? "Desactivar" : "Activar").
+          " grabacion de modificaciones de contratos.\n";
     print "4- Realizar consulta.\n";
     print "5- Salir.\n";
     print "Opcion: ";
@@ -239,16 +217,19 @@ sub menu{
     
     switch ($opcion) {
 	
-      case 1 {&cargarParametrosDeConsulta($pais,$sistema,$anio,$mes);}
-      case 2 {$grabarListados = !$grabarListados}
-      case 3 {$grabarModificaciones = !$grabarModificaciones}
-      case 4 {&realizarConsulta($pais,$sistema,$anio,$mes)}
-      case 5 {$salir=1}
+      case 1 { ($pais,$sistema,$anio,$mes) = &cargarParametrosDeConsulta(); }
+      case 2 { $grabarListados = !$grabarListados }
+      case 3 { $grabarModificaciones = !$grabarModificaciones }
+      case 4 { &realizarConsulta($pais,$sistema,$anio,$mes) }
+      case 5 { $salir=1 }
     }
   }
+  if (rand() < 0.1) { print "Hasta la vista!\n"; }
 }
 
 # Bloque principal.
-#&menu();
-&cargarParametrosDeConsulta($pais,$sistema,$anio,$mes);
-&realizarConsulta($pais,$sistema,$anio,$mes);
+&menu();
+#($pais,$sistema,$anio,$mes) = &cargarParametrosDeConsulta();
+#&realizarConsulta($pais,$sistema,$anio,$mes);
+
+
