@@ -8,7 +8,7 @@ GRUPO=..
 
 #HIPOTESIS
 # Cuando valida que no haya archivos repetidos valida que los nombres no sean iguales y los contenidos tampoco.
-
+# Cuando pasa el formato numerico para la parte entera corta los primeros 10 caracteres de izquierda a derecha y para la decimal corta los primeros 2 caracteres de izquierda a derecha
 DATADIR=../data # TODO Provisorio para pruebas: ¿DATADIR debe ser parte del entorno?
 T1="$GRUPO/conf/T1.tab"	# Tabla de Separadores
 T2="$GRUPO/conf/T2.tab" #Tabla de Campos
@@ -132,25 +132,25 @@ transformar_fecha(){
 	
 	# Separo segun la convencion dada
 	# Los primeros 6 caracteres son el formato en si
-	FORMATO_FECHA=$( echo $DT_FLUXF| cut --characters=1-6)
+	FORMATO_DT_FLUX=$( echo $DT_FLUXF| cut --characters=1-6)
 	# El ultimo caracter es la longitud
-	LONGITUD_FECHA=$( echo $DT_FLUXF| cut --characters=7)
+	LONGITUD_DT_FLUX=$( echo $DT_FLUXF| cut --characters=7)
 	
 	# Valida que no se exceda ni se tenga menor longitud que la pedida, si es asi termina la ejecucion con un error de formato
-	if [ $LONGITUD_FECHA -ne ${#DT_FLUXL} ]; then
+	if [ $LONGITUD_DT_FLUX -ne ${#DT_FLUXL} ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
 	fi
 	
 	# Transforma la fecha al formato correspondiente
-	if [ "$FORMATO_FECHA" = "ddmmyy" ] ; then
-		if [ $LONGITUD_FECHA = 8 ]; then
+	if [ "$FORMATO_DT_FLUX" = "ddmmyy" ] ; then
+		if [ $LONGITUD_DT_FLUX = 8 ]; then
 			DT_FLUX="$( echo $DT_FLUXL| cut --characters=1-2)/$( echo $DT_FLUXL| cut --characters=3-4)/$( echo $DT_FLUXL| cut --characters=5-8)"
 		else
 			DT_FLUX="$( echo $DT_FLUXL| cut --characters=1-2)/$( echo $DT_FLUXL| cut --characters=4-5)/$( echo $DT_FLUXL| cut --characters=7-10)";		
 		fi	
 	else
-		if [ $LONGITUD_FECHA = 8 ]; then
+		if [ $LONGITUD_DT_FLUX = 8 ]; then
 			DT_FLUX="$( echo $DT_FLUXL| cut --characters=7-8)/$( echo $DT_FLUXL| cut --characters=5-6)/$( echo $DT_FLUXL| cut --characters=1-4)"
 		else
 			DT_FLUX="$( echo $DT_FLUXL| cut --characters=9-10)/$( echo $DT_FLUXL| cut --characters=6-7)/$( echo $DT_FLUXL| cut --characters=1-4)"
@@ -159,14 +159,198 @@ transformar_fecha(){
 }
 
 # Lee los alfanumericos y los transforma en el formato requerido
-# Uso: transformar_alfanumericos
-#transformar_alfanumericos(){}
+# Uso: transformar_alfanumericos linea
+# Deja el estado contable en CD_STATCTB y el numero de contrato en NO_CONTRAT
+transformar_alfanumericos(){
+
+	# Lee el estado contable de la linea extraida	
+	CD_STATCTBL=$( echo $1| cut -d $SEPCAMPO -f $CD_STATCTBP)
+	
+	# Lee el numero de contrato de la linea extraida	
+	NO_CONTRATL=$( echo $1| cut -d $SEPCAMPO -f $NO_CONTRATP)
+
+	# El caracter entre el $ y el . es la longitud maxima, obtiene la longitud maxima de ambos campos
+	LONGITUD_CD_STATCTB=$( echo $CD_STATCTBF| cut -d '$' -f 2| cut -d '.' -f 1)
+	LONGITUD_NO_CONTRAT=$( echo $NO_CONTRATF| cut -d '$' -f 2| cut -d '.' -f 1)
+	
+	# Valida que no se superen las longitudes maximas, si es asi termina la ejecucion con un error de formato
+	if [ $LONGITUD_CD_STATCTB -lt ${#CD_STATCTBL} ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+	if [ $LONGITUD_NO_CONTRAT -lt ${#NO_CONTRATL} ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+	
+	# Transforma el estado contable al formato correspondiente
+	if [ "$CD_STATCTBL" = "SNA" ] || [ "$CD_STATCTBL" = "SNIM" ]; then		
+		CD_STATCTB=$( echo "Sanos" )
+	fi
+	if [ "$CD_STATCTBL" = "DTCA" ] || [ "$CD_STATCTBL" = "DTXA" ]; then		
+		CD_STATCTB=$( echo "Dudosos" )
+	fi
+	if [ "$CD_STATCTBL" = "CTX" ]; then		
+		CD_STATCTB=$( echo "CTX" )
+	fi		
+	
+	# Transforma el numero de contrato al formato correspondiente
+	NO_CONTRAT=$( echo $NO_CONTRATL )
+	
+
+}
 
 # Lee los numericos y los transforma en el formato requerido
-# Uso: determinar_campos
-#transformar_numericos(){}
+# Uso: transformar_numericos linea
+# Deja el monto de credito en MT_CRD, el monto impago en MT_IMPAGO, el monto de otras sumas del cliente en MT_OTRSUMDC, el monto devengado en MT_INDE y el monto no devengado en MT_INNODE y el monto restante en MT_RESTANTE
+transformar_numericos(){
+	
+	# Lee el monto de credito de la linea extraida	
+	MT_CRDL=$( echo $1| cut -d $SEPCAMPO -f $MT_CRDP)
 
+	# Lee el monto impago de la linea extraida	
+	MT_IMPAGOL=$( echo $1| cut -d $SEPCAMPO -f $MT_IMPAGOP)
+
+	# Lee el monto de otras sumas del cliente de la linea extraida	
+	MT_OTRSUMDCL=$( echo $1| cut -d $SEPCAMPO -f $MT_OTRSUMDCP)
+
+	# Lee el monto de interes devengado de la linea extraida	
+	MT_INDEL=$( echo $1| cut -d $SEPCAMPO -f $MT_INDEP)
+
+	# Lee el monto de interes no devengado de la linea extraida	
+	MT_INNODEL=$( echo $1| cut -d $SEPCAMPO -f $MT_INNODEP)
+
+	# Longitudes maximas monto de credito
+	LONGMAXE_MT_CRD=$( echo $MT_CRDF| cut -d '.' -f 1| cut --characters=7- )
+	LONGMAXD_MT_CRD=$( echo $MT_CRDF| cut -d '.' -f 2 )
+	
+	# Longitudes maximas monto impago
+	LONGMAXE_MT_IMPAGO=$( echo $MT_IMPAGOF| cut -d '.' -f 1| cut --characters=7- )
+	LONGMAXD_MT_IMPAGO=$( echo $MT_IMPAGOF| cut -d '.' -f 2 )
+
+	# Longitudes maximas monto otras sumas
+	LONGMAXE_MT_OTRSUMDC=$( echo $MT_OTRSUMDCF| cut -d '.' -f 1| cut --characters=7- )
+	LONGMAXD_MT_OTRSUMDC=$( echo $MT_OTRSUMDCF| cut -d '.' -f 2 )
+
+	# Longitudes maximas monto devengado
+	LONGMAXE_MT_INDE=$( echo $MT_INDEF| cut -d '.' -f 1| cut --characters=7- )
+	LONGMAXD_MT_INDE=$( echo $MT_INDEF| cut -d '.' -f 2 )
+
+	# Longitudes maximas monto no devengado
+	LONGMAXE_MT_INNODE=$( echo $MT_INNODEF| cut -d '.' -f 1| cut --characters=7- )
+	LONGMAXD_MT_INNODE=$( echo $MT_INNODEF| cut -d '.' -f 2 )
+
+	# Obtiene la parte entera y decimal del monto de credito y valida que no se superen las longitudes maximas, si es asi se sale con un error de formato
+	E_MT_CRD=$( echo $MT_CRDL| cut -d $SEPDECIMAL -f 1 )
+	D_MT_CRD=$( echo $MT_CRDL| cut -d $SEPDECIMAL -f 2 )
+	if [ $LONGMAXE_MT_CRD -lt ${#E_MT_CRD} ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+	if [ $LONGMAXD_MT_CRD -lt ${#D_MT_CRD} ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+
+	# Obtiene la parte entera y decimal del monto impago y valida que no se superen las longitudes maximas, si es asi se sale con un error de formato
+	E_MT_IMPAGO=$( echo $MT_IMPAGOL| cut -d $SEPDECIMAL -f 1 )
+	D_MT_IMPAGO=$( echo $MT_IMPAGOL| cut -d $SEPDECIMAL -f 2 )
+	if [ $LONGMAXE_MT_IMPAGO -lt ${#E_MT_IMPAGO} ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+	if [ $LONGMAXD_MT_IMPAGO -lt ${#D_MT_IMPAGO} ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+
+	# Obtiene la parte entera y decimal del monto de otras sumas y valida que no se superen las longitudes maximas, si es asi se sale con un error de formato
+	E_MT_OTRSUMDC=$( echo $MT_OTRSUMDCL| cut -d $SEPDECIMAL -f 1 )
+	D_MT_OTRSUMDC=$( echo $MT_OTRSUMDCL| cut -d $SEPDECIMAL -f 2 )
+	if [ $LONGMAXE_MT_OTRSUMDC -lt ${#E_MT_OTRSUMDC} ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+	if [ $LONGMAXD_MT_OTRSUMDC -lt ${#D_MT_OTRSUMDC} ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+
+	# Obtiene la parte entera y decimal del monto devengado y valida que no se superen las longitudes maximas, si es asi se sale con un error de formato
+	E_MT_INDE=$( echo $MT_INDEL| cut -d $SEPDECIMAL -f 1 )
+	D_MT_INDE=$( echo $MT_INDEL| cut -d $SEPDECIMAL -f 2 )
+	if [ $LONGMAXE_MT_INDE -lt ${#E_MT_INDE} ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+	if [ $LONGMAXD_MT_INDE -lt ${#D_MT_INDE} ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+
+	# Obtiene la parte entera y decimal del monto no devengado y valida que no se superen las longitudes maximas, si es asi se sale con un error de formato
+	E_MT_INNODE=$( echo $MT_INNODEL| cut -d $SEPDECIMAL -f 1 )
+	D_MT_INNODE=$( echo $MT_INNODEL| cut -d $SEPDECIMAL -f 2 )
+	if [ $LONGMAXE_MT_INNODE -lt ${#E_MT_INNODE} ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+	if [ $LONGMAXD_MT_INNODE -lt ${#D_MT_INNODE} ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+	
+	# Si el entero o el decimal estan vacios se los pone en cero
+	if [ "$E_MT_CRD" = "" ]; then		
+		E_MT_CRD=$( echo '0')	
+	fi
+	if [ "$D_MT_CRD" = "" ]; then		
+		D_MT_CRD=$( echo '0')	
+	fi
+	
+	if [ "$E_MT_IMPAGO" = "" ]; then		
+		E_MT_IMPAGO=$( echo '0')	
+	fi
+	if [ "$D_MT_IMPAGO" = "" ]; then		
+		D_MT_IMPAGO=$( echo '0')	
+	fi
+	
+	if [ "$E_MT_OTRSUMDC" = "" ]; then		
+		E_MT_OTRSUMDC=$( echo '0')	
+	fi
+	if [ "$D_MT_OTRSUMDC" = "" ]; then		
+		D_MT_OTRSUMDC=$( echo '0')	
+	fi
+	
+	if [ "$E_MT_INDE" = "" ]; then		
+		E_MT_INDE=$( echo '0')	
+	fi
+	if [ "$D_MT_INDE" = "" ]; then		
+		D_MT_INDE=$( echo '0')	
+	fi
+	
+	if [ "$E_MT_INNODE" = "" ]; then		
+		E_MT_INNODE=$( echo '0')	
+	fi
+	if [ "$D_MT_INNODE" = "" ]; then		
+		D_MT_INNODE=$( echo '0')	
+	fi
+	
+	# Transforma cada monto al formato correspondiente
+	MT_CRD="$( echo $E_MT_CRD| cut --characters=1-10 ),$( echo $D_MT_CRD| cut --characters=1-2 )"
+	MT_IMPAGO="$( echo $E_MT_IMPAGO| cut --characters=1-10 ),$( echo $D_MT_IMPAGO| cut --characters=1-2 )"
+	MT_OTRSUMDC="$( echo $E_MT_OTRSUMDC| cut --characters=1-10 ),$( echo $D_MT_OTRSUMDC| cut --characters=1-2 )"
+	MT_INDE="$( echo $E_MT_INDE| cut --characters=1-10 ),$( echo $D_MT_INDE| cut --characters=1-2 )"
+	MT_INNODE="$( echo $E_MT_INNODE| cut --characters=1-10 ),$( echo $D_MT_INNODE| cut --characters=1-2 )"
+	#MT_RESTANTE=$(($MT_CRD + $MT_IMPAGO))
+	# + $MT_INDE - $MT_OTRSUMDC))
+	MT_RESTANTE=$( echo '0')
+}
+
+# Va recorriendo linea por linea del archivo pasado como parametro y genera un nuevo registro en el archivo correspondiente con el formato correcto
+# Uso: procesar archivo
 procesar(){
+	
 	REGISTROS=$(wc -l <$1)	
 	CUENTA=0
 	# Se procesa cada linea de la tabla
@@ -182,7 +366,15 @@ procesar(){
 		fi
 				
 		transformar_fecha $LINEA
-		
+		transformar_alfanumericos $LINEA
+		# Si el contrato tiene estado contable CTX se descarta, en cualquier otro caso se almacena		
+		if [ "$CD_STATCTB" != "CTX" ]; then
+			transformar_numericos $LINEA
+			# Si el monto restante es mayor a 0 se guarda sino se descarta, no funciona bien						
+			#if [ 0 -lt `expr $MT_RESTANTE` ]; then
+				# Guardar registro
+			#fi
+		fi
 		(( CUENTA += 1 ))
 		
 	done
