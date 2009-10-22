@@ -49,28 +49,28 @@ fi
 
 # Si el directorio de logs no existe lo crea.
 # TODO ¿Que pasa si existe pero es un archivo, no un directorio?
-if [ ! -e $LOGDIR ]; then
-	mkdir -p $LOGDIR
+if [ ! -e "$LOGDIR" ]; then
+	mkdir -p "$LOGDIR"
 fi
 
 # Escribe en el archivo log.
-LOGFILE=$LOGDIR/$COMANDO.log
+LOGFILE="$LOGDIR/$COMANDO.log"
 DATE=$(date '+%Y/%m/%d %H:%M:%S')
-echo "$DATE-$TIPO_MSJ-$MENSAJE" >> $LOGFILE
+echo "$DATE-$TIPO_MSJ-$MENSAJE" >> "$LOGFILE"
 
 # Si el archivo se pasa de $MAXLOG se trunca a MAXLINES.
-SIZE=$(stat -c %s $LOGFILE)
+SIZE=$(stat -c %s "$LOGFILE")
 # Cuidado! Si MAXLOG esta declarada pero no es un entero, 
 # la comparacion falla y el script termina con error
 if [ ! -z $MAXLOG ] && [ $SIZE -gt $MAXLOG ]; then
-	tail -n $MAXLINES $LOGFILE >$LOGFILE.temp
-	mv -f $LOGFILE.temp $LOGFILE
+	tail -n $MAXLINES "$LOGFILE" >"$LOGFILE.temp"
+	mv -f "$LOGFILE.temp" "$LOGFILE"
 fi
 
 # Si se sigue pasando de tamanio, se trunca a cero.
-SIZE=$(stat -c %s $LOGFILE)
+SIZE=$(stat -c %s "$LOGFILE")
 if [ ! -z $MAXLOG ] && [ $SIZE -gt $MAXLOG ]; then
-	>$LOGFILE
+	>"$LOGFILE"
 fi
 
 exit 0
