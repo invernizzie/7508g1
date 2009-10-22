@@ -48,32 +48,39 @@ imprimir "Inicializando entorno"
 
 # Se verifica la instalacion: presencia de tablas y ejecutables
 # Array de nombres de archivos indispensables. Ejecutables:
-NECESARIOS[0]="$GRUPO/bin/mover"
-NECESARIOS[1]="$GRUPO/bin/glog"
-NECESARIOS[2]="$GRUPO/bin/vlog"
-NECESARIOS[3]="$GRUPO/bin/iniciar"
-NECESARIOS[4]="$GRUPO/bin/detectar"
-NECESARIOS[5]="$GRUPO/bin/interprete"
-NECESARIOS[6]="$GRUPO/bin/reporte"
-# Tablas y configuracion:
-NECESARIOS[7]="$GRUPO/conf/p-s.tab"
-NECESARIOS[8]="$GRUPO/conf/T1.tab"
-NECESARIOS[9]="$GRUPO/conf/T2.tab"
-NECESARIOS[10]="$GRUPO/conf/practico.conf"
+NECESARIOS=( [0]="$GRUPO/bin/mover" \
+[1]="$GRUPO/bin/glog" \
+[2]="$GRUPO/bin/vlog" \
+[3]="$GRUPO/bin/iniciar" \
+[4]="$GRUPO/bin/detectar" \
+[5]="$GRUPO/bin/interprete" \
+[6]="$GRUPO/bin/reporte" \
+[7]="$GRUPO/conf/p-s.tab" \
+[8]="$GRUPO/conf/T1.tab" \
+[9]="$GRUPO/conf/T2.tab" \
+[10]="$GRUPO/conf/practico.conf" \
+)
 
-CONTADOR=0
-while [ "$CONTADOR" -le 10 ]
+# ${!a[*]} expande a todos los índices del array a.
+# No se puede usar for arch in ${a[*]}, que directamente iteraría en todos los 
+# elementos del array porque los elementos pueden contener espacios.
+for i in ${!NECESARIOS[*]}
 do
-	if [ ! -e "${NECESARIOS[$CONTADOR]}" ]; then
-		imprimir "El archivo indispensable ${NECESARIOS[$CONTADOR]} no esta presente" SE
+	if [ ! -e "${NECESARIOS[i]}" ]; then
+		imprimir "El archivo indispensable ${NECESARIOS[i]} no esta presente" SE
 		NOINST=1
 	fi
-	(( CONTADOR += 1 ))
 done
+
 if [ $NOINST ]; then
 	imprimir "Imposible iniciar el entorno: Instalacion fallida o corrupta" SE
 	unset ENTORNO_INICIALIZADO
-	# TODO Los exit cierran la consola al ejecutar como ". iniciar", ¿como puede solucionarse?
+	# TODO Los exit cierran la consola al ejecutar como ". iniciar", ¿como puede 
+	# solucionarse?
+	# Demian - Lamentablemente, creo que no usándolos es la forma de solucionarlo.
+	# En la versión primitiva de este script me había encontrado con ese problema
+	# y lo que hice fue en vez de temrinar abruptamente en algún lado, usar un 
+	# esle y meter toda la funcionalidad del script ahí.
 	return $ENOINSTALADO
 fi
 

@@ -2,6 +2,18 @@
 
 use Switch;
 
+# Valida que el entorno esté inicializado y aborta la ejecución con error en 
+# caso de ser así.
+sub validarEntorno {
+  
+  if (!$ENV{ENTORNO_INICIALIZADO}) {
+    print "Entorno no inicializado\n";
+    exit 1;
+  }
+}
+
+
+# No valida nada.
 sub validacionNula{
 
   return @_[0];
@@ -28,13 +40,15 @@ sub validarAnio{
   return $anio >= 2000 ? $anio : "";
 }
 
+# Valida que un mes dado esté entre 1 y 12 y lo retorna.
 sub validarMes{
   
   my $mes = int(@_[0]); 
   return $mes >= 1 && $mes <= 12 ? $mes : "";
 }
 
-
+# Solicita al usuario que cargue un parámetro con un dado nombre y una dada 
+# función de validación.
 sub cargaParametro{
 
   my ($parametro, $validacion) = @_;
@@ -116,10 +130,10 @@ sub filtrarArchivoMaestro{
     my ($pais, $sistema, $anio, $mes) = @registro[0..3];
     
     # Filtros!
-    if ( (!$filtroPais    || $pais eq $filtroPais)       &&
+    if ( (!$filtroPais    || $pais    eq $filtroPais)    &&
          (!$filtroSistema || $sistema eq $filtroSistema) &&
-         (!$filtroAnio    || $anio eq $filtroAnio)       &&
-         (!$filtroMes     || $mes eq $filtroMes)            ) {
+         (!$filtroAnio    || $anio    eq $filtroAnio)    &&
+         (!$filtroMes     || $mes     eq $filtroMes)        ) {
 
       # El registro pasa todos los filtros!
       my ($estado, $nContrato) = @registro[6,7];
@@ -162,8 +176,8 @@ sub filtrarArchivoContratos{
     
     # Filtros!
     if ( (!$filtroSistema || $sistema eq $filtroSistema) &&
-         (!$filtroAnio    || $anio eq $filtroAnio)       &&
-         (!$filtroMes     || $mes eq $filtroMes)            ) {
+         (!$filtroAnio    || $anio    eq $filtroAnio)    &&
+         (!$filtroMes     || $mes     eq $filtroMes)        ) {
 
       # El registro pasa todos los filtros!
       my ($estado, $nContrato, $monto) = @registro[6, 7, 11];
@@ -184,7 +198,7 @@ sub realizarConsulta{
   my %ppiFiltrado = &filtrarArchivoMaestro(@_);
 
   print "CONSULTAAA!!\n";
-  foreach $key (keys(%ppiFiltrado)) {
+  foreach my $key (keys(%ppiFiltrado)) {
     print $key." ".$ppiFiltrado{$key}."\n";
   }
 
@@ -228,6 +242,7 @@ sub menu{
 }
 
 # Bloque principal.
+&validarEntorno();
 &menu();
 #($pais,$sistema,$anio,$mes) = &cargarParametrosDeConsulta();
 #&realizarConsulta($pais,$sistema,$anio,$mes);
