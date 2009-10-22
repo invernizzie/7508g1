@@ -127,16 +127,16 @@ uso() {
 
 #chequeamos que este inicializado el entorno.
 #TODO descomentar
-#if [ ! $ENTORNO_INICIALIZADO ]; then
-#	echo "Glog: Entorno no inicializado"
-#	exit $ENOENTORNO
-#fi
+if [ ! $ENTORNO_INICIALIZADO ]; then
+	echo "Glog: Entorno no inicializado"
+	exit $ENOENTORNO
+fi
 
 # Si el directorio de logs no existe sale del programa.
-#if [ ! -e $LOGDIR ]; then
-#	echo "No hay ningun log c"	
-#	#mkdir -p $LOGDIR
-#fi
+if [ ! -e "$LOGDIR" ]; then
+	echo "No hay ningun log c"	
+	#mkdir -p $LOGDIR
+fi
 
 ###############################################################################
 #Estos son los parametros que podemos usar: 
@@ -214,11 +214,11 @@ do
 done
 
 #TODO comentar la linea siguiente si estamos usando el inicializador de ambiente.
-LOGDIR=../log
+#LOGDIR=../log
 
 if [ $PARAM_COMANDO ]; then
-	egrep  "$anio/$mes/$dia $hora:$minuto:..-$tipolog" $LOGDIR/$PARAM_COMANDO.log
+	egrep  "$anio/$mes/$dia $hora:$minuto:..-$tipolog" "$LOGDIR/$PARAM_COMANDO.log"
 else
-	egrep  "$anio/$mes/$dia $hora:$minuto:..-$tipolog" $LOGDIR/*
+	egrep  "$anio/$mes/$dia $hora:$minuto:..-$tipolog" "$LOGDIR/"*
 fi
 
