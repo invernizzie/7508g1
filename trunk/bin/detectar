@@ -3,26 +3,23 @@
 ENOENTORNO=14
 ENODATADIR=15
 ENODIR=16
+ENOFORMATO=17
 
-############################################
-# TODO Provisorio, esto es parte del entorno
-TESPERA=1
-DATADIR=../data
-CANLOOP=10
-GRUPO=..
-############################################
+ERRDESC=( \
+[$ENOENTORNO]="Entorno no inicializado" \
+[$ENODATADIR]="Directorio de entrada inexistente" \
+[$ENODIR]="Directorio inexistente" \
+[$ENOFORMATO]="Error de formato" )
 
 PSTAB="$GRUPO/conf/p-s.tab"	# Tabla de Paises y Sistemas
 DIROK="$DATADIR/ok"		# Directorio de aceptados
 DIRNOK="$DATADIR/nok"		# Directorio de rechazados
 
-DETECTAR=$(basename $0)
-
 # Funcion para imprimir por consola y al log
 # Uso: imprimir mensaje [tipo]
 imprimir() {
 	echo $1
-	glog "$DETECTAR" $2 "$1"
+	glog "detectar" $2 "$1"
 }
 
 # Funcion para contar las instancias de un proceso dado su nombre
@@ -36,7 +33,7 @@ contar_instancias() {
 	# De los procesos existentes, se cuentan las instancias del buscado
 	CANTINST=$(ps -e | grep "$1" | wc -l)
 	# Debe restarse uno porque el subshell abierto incrementa la cantidad de instancias
-	if [ "$1" = $DETECTAR ]; then (( CANTINST -= 1 )); fi
+	if [ "$1" = detectar ]; then (( CANTINST -= 1 )); fi
 }
 
 # Funcion para leer la tabla de archivos y sistemas
@@ -118,7 +115,7 @@ if [ ! $ENTORNO_INICIALIZADO ]; then
 fi
 
 # Solo se permite una instancia activa de este script.
-contar_instancias $DETECTAR
+contar_instancias detectar
 if [ $CANTINST -gt 1 ]; then 
 	imprimir "Detectar ya esta corriendo" W
 	exit 0
@@ -173,10 +170,10 @@ do
 		
 		# Segun la validez del nombre, se acepta o rechaza el archivo	
 		if validar_nombre $ARCHIVO; then
-			mover "$DATADIR/$ARCHIVO" $DIROK $DETECTAR
+			mover "$DATADIR/$ARCHIVO" $DIROK detectar
 			imprimir "Recibido: $ARCHIVO"
 		else
-			mover "$DATADIR/$ARCHIVO" $DIRNOK $DETECTAR
+			mover "$DATADIR/$ARCHIVO" $DIRNOK detectar
 			imprimir "Rechazado: $ARCHIVO"
 		fi
 	done
@@ -192,9 +189,12 @@ do
 		# Solo puede correr una instancia del interprete
 		contar_instancias "interprete"
 		if [ $CANTINST -lt 1 ]; then
-			# TODO ¿Debe invocarse con algun parametro en particular?
-			interprete&
-			# TODO ¿Como saber si arranco bien para hacer lo que pide el enunciado?
+			interprete
+			if [ $? -eq 0 ]; then
+				imprimir "PID de interprete: $!"
+			else
+				imprimir "Error de interprete #$?: ${ERRDESC[$?]}"
+			fi
 		fi
 	fi
 	

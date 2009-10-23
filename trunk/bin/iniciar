@@ -73,7 +73,6 @@ do
 	fi
 	
 	# Se exporta la variable definida en la linea
-	echo $LINEA	
 	export $LINEA 2>/dev/null
 	if [ ! $? -eq 0 ]; then
 		imprimir "Error de sintaxis en $ARCHCONF en la linea $CUENTA"
