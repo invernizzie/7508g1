@@ -2,6 +2,14 @@
 
 use Switch;
 
+# Variables global.
+$pais = "A";
+$sistema = 6;
+$grabarListados = 0;
+$grabarModificaciones = 0;
+$archivoListados = "Listados.txt";
+$archivoModificaciones = "Modificaciones.txt";
+
 # Valida que el entorno esté inicializado y aborta la ejecución con error en 
 # caso de ser así.
 sub validarEntorno {
@@ -11,7 +19,6 @@ sub validarEntorno {
     exit 1;
   }
 }
-
 
 # No valida nada.
 sub validacionNula{
@@ -105,113 +112,192 @@ sub cargarParametrosDeConsulta{
   return $pais, $sistema, $anio, $mes;
 }
 
+sub filtroArchivoMaestro{
+
+  #print "filtro maestro @_\n";
+  my ($linea, $filtroPais, $filtroSistema, $filtroAnio, $filtroMes) = @_;
+  my @registro = split("-",$linea);
+  my ($pais, $sistema, $anio, $mes) = @registro[0..3];
+    
+  # Filtros!
+  my $filtroOk = (!$filtroPais    || $pais    eq $filtroPais)    &&
+                 (!$filtroSistema || $sistema == $filtroSistema) &&
+                 (!$filtroAnio    || $anio    == $filtroAnio)    &&
+                 (!$filtroMes     || $mes     == $filtroMes);
+
+  my $nContrato = $registro[7];
+  return $filtroOk, $nContrato;
+}
+
+sub filtroArchivoContratos{
+
+  #print "filtro contrato @_\n";
+  my ($linea, $filtroSistema, $filtroAnio, $filtroMes) = @_;
+  my @registro = split("-",$linea);
+  my ($sistema, $anio, $mes) = @registro[0..2];
+   
+  # Filtros!
+  my $filtroOk = (!$filtroSistema || $sistema == $filtroSistema) &&
+                 (!$filtroAnio    || $anio    == $filtroAnio)    &&
+                 (!$filtroMes     || $mes     == $filtroMes);
+  
+  my $nContrato = $registro[3];
+  return $filtroOk, $nContrato;
+}
 
 # Filtra el archivo maestro a partir de los parámetros de consulta (pais, 
 # sistema, año y mes) y retorna un hash con los contratos filtrados, de la 
 # forma: clave = número de contrato, valor = <estado>-<monto>
-sub filtrarArchivoMaestro{
+sub filtrarArchivo {
 
-  my ($filtroPais, $filtroSistema, $filtroAnio, $filtroMes) = @_;
+  my ($fileName, $funcionFiltro) = @_[0,1];
+  my (@filtros) = @_[2..$#_];
 
-  # Nombre del archivo maestro. TODO que sea $ENV{"GRUPO"}."/loquesea/PPI.mae"
-  my $fileName = "PPI.mae";
-
-  # Hash con registros filtrados del archivo maestro PPI.
-  my %ppiFiltrado;
+  # Hash con registros filtrados del archivo correspondiente.
+  my %filtrado;
 
   # TODO Usar glog?
-  open(PPI,$fileName) || die ("No se pudo abrir $filename\n");
+  open(ARCHIVO,$fileName) || die ("No se pudo abrir $filename\n");
 
   my $linea;
-  while ($linea = <PPI>){
+  while ($linea = <ARCHIVO>){
    
     chomp($linea);
-    my @registro = split("-",$linea);
-    my ($pais, $sistema, $anio, $mes) = @registro[0..3];
-    
     # Filtros!
-    if ( (!$filtroPais    || $pais    eq $filtroPais)    &&
-         (!$filtroSistema || $sistema eq $filtroSistema) &&
-         (!$filtroAnio    || $anio    eq $filtroAnio)    &&
-         (!$filtroMes     || $mes     eq $filtroMes)        ) {
-
-      # El registro pasa todos los filtros!
-      my ($estado, $nContrato) = @registro[6,7];
-
-      # Calcula el monto restante.
-      my ($MT_CRD, $MT_IMPAGO, $MT_INDE, $MT_OTRSUMDC) = @registro[10,11,13,14];
-      my $monto = $MT_CRD + $MT_IMPAGO + $MT_INDE - $MT_OTRSUMDC;
-
-      $ppiFiltrado{$nContrato} = $estado."-".$monto;
-      #print "exito ".$ppiFiltrado{$nContrato}."\n";
+    my ($pasaFiltro, $nContrato) = &$funcionFiltro($linea, @filtros);
+    if ($pasaFiltro){
+      $filtrado{$nContrato} = $linea;
     }
   }
-
-  close(PPI);
-
-  return %ppiFiltrado;   
+  
+  close(ARCHIVO);
+  
+  return %filtrado;   
 }
 
+sub procesarConsulta{
 
-sub filtrarArchivoContratos{
+  my @filtros = @_[0..3];
+  my @entradas = @_[4..$#_];
+  my @entrada;  
+  my ($consulta,$cantidadContratos,$montoMaestro,$montoContrato);
+  
+  $cantidadContratos = $#entradas + 1;
 
-  my ($pais, $filtroSistema, $filtroAnio, $filtroMes) = @_;
-
-  # TODO Lo mismo que con el maestro.
-  my $fileName = "CONTRACT.$pais";
-
-  # Hash con registros filtrados del archivo de contratos.
-  my %contratos;
-
-  # TODO Usar glog?
-  open(CONTRATOS,$fileName) || die ("No se pudo abrir $filename\n");
-
-
-  my $linea;
-  while ($linea = <CONTRATOS>){
-   
-    chomp($linea);
-    my @registro = split("-",$linea);
-    my ($sistema, $anio, $mes) = @registro[0..2];
+  foreach my $elemento (@entradas) {
     
-    # Filtros!
-    if ( (!$filtroSistema || $sistema eq $filtroSistema) &&
-         (!$filtroAnio    || $anio    eq $filtroAnio)    &&
-         (!$filtroMes     || $mes     eq $filtroMes)        ) {
-
-      # El registro pasa todos los filtros!
-      my ($estado, $nContrato, $monto) = @registro[6, 7, 11];
-
-      $contratos{$nContrato} = $estado."-".$monto;
-      #print "exito ".$ppiFiltrado{$nContrato}."\n";
-    }
+    @entrada = split("-",$elemento);
+    $montoMaestro += @entrada[3];
+    $montoContrato += @entrada[2];
   }
 
-  close (CONTRATOS);
-
-  return %contratos;   
+  return $cantidadContratos > 0 ?  $consulta = join("-",@filtros,$cantidadContratos,@entrada[0],@entrada[1],$montoContrato,$montoMaestro) : ""; 
 }
 
+sub procesarModificacion{
+
+  my ($consC,$consE1,$consF1,$ppiFiltrado) = @_;
+  my $key;
+# 
+#   print "Anda $ppiFiltrado->[] \n";
+#   
+#   foreach $key (keys($ppiFiltrado)) {
+#     print "Anda";
+#   }
+}
 
 sub realizarConsulta{
 
-  my %ppiFiltrado = &filtrarArchivoMaestro(@_);
+  my @filtrosPPI = @_;
+  my @filtrosContrato = @_[1..$#_];
+  my $pais = $_[0];
+  my $key;
 
-  print "CONSULTAAA!!\n";
-  foreach my $key (keys(%ppiFiltrado)) {
-    print $key." ".$ppiFiltrado{$key}."\n";
+  my %ppiFiltrado = &filtrarArchivo("PPI.mae","filtroArchivoMaestro",@filtrosPPI);
+  my %contratosFiltrado = &filtrarArchivo("CONTRAT.$pais","filtroArchivoContratos",@filtrosContrato);
+  my (@consA, @consB, @consC, @consD, @consE1, @consE2, @consF1, @consF2); 
+
+  foreach $key (keys(%contratosFiltrado)) {
+
+    my $lineaContrato = $contratosFiltrado{$key}; 
+    my $lineaMaestro = $ppiFiltrado{$key};  
+    
+    if ($lineaMaestro){
+
+      my @arrayMaestro = split("-",$lineaMaestro);    
+      my @arrayContrato = split("-",$lineaContrato);
+  
+      # Calcula el monto restante.
+      my ($MT_CRD, $MT_IMPAGO, $MT_INDE, $MT_OTRSUMDC) = @arrayMaestro[10,11,13,14];
+      my $montoMaestro = $MT_CRD + $MT_IMPAGO + $MT_INDE - $MT_OTRSUMDC;
+      my $estadoMaestro = @arrayMaestro[6];
+    
+      my ($estadoContrato, $montoContrato) = @arrayContrato[5,11];
+      
+      $lineaConsulta = $estadoContrato."-".$estadoMaestro."-".$montoContrato."-".$montoMaestro;
+      $igualMonto = ($montoMaestro == $montoContrato);
+  
+      if (($estadoMaestro eq "SANO") && ($estadoContrato eq "SANO")){
+	 $igualMonto ? push(@consA,$lineaConsulta) : push(@consC,$lineaConsulta);
+      }
+      elsif (($estadoMaestro eq "DUDOSO") && ($estadoContrato eq "DUDOSO")){
+	 $igualMonto ? push(@consB,$lineaConsulta) : push(@consD,$lineaConsulta);
+      }
+      elsif (($estadoMaestro eq "SANO") && ($estadoContrato eq "DUDOSO")){
+	 $igualMonto ? push(@consE1,$lineaConsulta) : push(@consF1,$lineaConsulta);
+      }
+      elsif (($estadoMaestro eq "DUDOSO") && ($estadoContrato eq "SANO")){
+	 $igualMonto ? push(@consE2,$lineaConsulta) : push(@consF2,$lineaConsulta);	
+      }
+
+   }
+   else{
+	# TODO llamas al glog. ("No existe el numero de contrato en el archivo maestro" SE)
+   }
   }
 
+  # Listados.
+  my $consultaA = "Contratos comunes sanos con identico Monto Restante: \n".&procesarConsulta(@filtrosPPI,@consA)."\n";
+  print "$consultaA\n";
+
+  my $consultaB = "Contratos comunes dudosos con identico Monto Restante: \n".&procesarConsulta(@filtrosPPI,@consB)."\n";
+  print "$consultaB\n";
+  
+  my $consultaC = "Contratos comunes sanos con diferente Monto Restante: \n".&procesarConsulta(@filtrosPPI,@consC)."\n";
+  print "$consultaC\n";
+
+  my $consultaD = "Contratos comunes dudosos con diferente Monto Restante: \n".&procesarConsulta(@filtrosPPI,@consD)."\n";
+  print "$consultaD\n";
+
+  my $consultaE = "Contratos comunes con diferente estado con identico Monto Restante: \n".
+		  &procesarConsulta(@filtrosPPI,@consE1)."\n".&procesarConsulta(@filtrosPPI,@consE2)."\n";
+  print "$consultaE\n";
+  
+  my $consultaF = "Contratos comunes con diferente estado con diferente Monto Restante: \n".
+		  &procesarConsulta(@filtrosPPI,@consF1)."\n".&procesarConsulta(@filtrosPPI,@consF2)."\n";
+  print "$consultaF\n";
+  
+  if ($grabarListados){ 
+    open(LISTADOS,">$archivoListados");
+    print LISTADOS $consultaA;
+    print LISTADOS $consultaB;
+    print LISTADOS $consultaC;
+    print LISTADOS $consultaD;
+    print LISTADOS $consultaE;
+    print LISTADOS $consultaF;
+    close(LISTADOS);
+  };
+
+  # Modificaciones.
+  &procesarModificacion(\@consC,\@consE1,\@consF1,\%ppiFiltrado);
+  
   print "Presione Enter para continuar";
   my $enter = <STDIN>;
 }
 
-
 sub menu{
 
   my $salir = 0;
-  my $grabarListados = 0;   
-  my $grabarModificaciones = 0;
 
   while (!$salir){
 
@@ -238,13 +324,13 @@ sub menu{
       case 5 { $salir=1 }
     }
   }
-  if (rand() < 0.1) { print "Hasta la vista!\n"; }
+  if (rand() < 0.001) { print "Sos el elegido!\n"; }
 }
 
 # Bloque principal.
-&validarEntorno();
+#&validarEntorno();
+
+
 &menu();
 #($pais,$sistema,$anio,$mes) = &cargarParametrosDeConsulta();
 #&realizarConsulta($pais,$sistema,$anio,$mes);
-
-
