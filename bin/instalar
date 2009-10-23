@@ -7,6 +7,12 @@
 # la carpeta ./inst/bin. Se asume que se intenta instalar todos los
 # comandos que se encuentran creados alli.
 
+#TODO 
+# 1) Chequear pq no compara bien los tamaños de los vectores
+# 2) Hacer un test de instalacion en un lugar en el que ya hubo una
+# 3) Ver el tema de la comparacion de valores de pto flotante para el tamaño de espacio
+# 4) Escribir el codigo para que se termine la instalacion
+
 
 # Esta funcion determina si existe un componente en el arreglo de componentes
 # instalados.
@@ -31,27 +37,26 @@ function elementExists()
 
 # Defino la variable en la que se va a almacena el directorio
 # de instalacion y ejecutacion
-grupo="./grupo01"
+cd ..
+grupo="$( pwd )"
+cd inst
 
 # Defino la variable en la que almaceno la ubicacion del archivo de logs
 # para la instalacion
 LOGINSTALL="$grupo/log/instalar.log"
+mkdir "$grupo/log"
 
 # Registro el inicio de la instalacion
-echo "Inicio de instalacion" >> $LOGINSTALL
+echo "Inicio de instalacion" > $LOGINSTALL
 
 # Muestro y grabo la ubicacion del archivo de logs
-echo "Log de la instalacion: $LOGINSTALL" | tee $LOGINSTALL
+echo "Log de la instalacion: $LOGINSTALL" | tee -a $LOGINSTALL
 
 # Muestro y grabo la ubicacion del directorio de instalacion
-echo "Directorio de instalacion: $grupo/inst" | tee $LOGINSTALL
+echo "Directorio de instalacion: $grupo/inst" | tee -a $LOGINSTALL
 
 # Muestro y grabo la ubicacion del directorio de los parametros de configuracion
-echo "Directorio de instalacion: $grupo/conf" | tee $LOGINSTALL
-
-CONFFILE="$grupo/conf/practico.conf"
-# Se detecta si alguno de los componentes o ninguno ha sido instalado
-if [ -e $CONFFILE]; then
+echo "Directorio de instalacion: $grupo/conf" | tee -a $LOGINSTALL
 
 # Al encontrar el archivo, busco los componentes que se encuentran instalados.
 # Se arma una lista con todos los componentes a instalar a partir de lo que se
@@ -63,56 +68,124 @@ listaComponentesInstalar=( $(ls "$grupo/inst/bin") )
 
 # Construyo una lista con los mismos componentes, pero que va a tener
 # la lista final de componentes a instalar
-listaComponentesInstalarFinal= $( echo ${listaComponentesInstalar[@]} )
+listaComponentesInstalarFinal=( echo ${listaComponentesInstalar[@]} )
 
-# Construyo la lista de los componentes que tengo instalados, y otras dos
-# con los datos que tengo que mostrar.
-grep -e COMAND -e USERID -e FECINS $CONNFILE > "$CONNFILE.temp"
-listaComponentesInstalados=( $(grep "COMAND =" "$CONNFILE.temp" | sed 's/COMAND =//g') )
-listaUsuariosInstalados=( $(grep "USERID =" "$CONNFILE.temp" | sed 's/USERID =//g') )
-listaFechasInstalados=( $(grep "FECINS =" "$CONNFILE.temp" | sed 's/FECINS =//g') )
+CONFFILE="$grupo/conf/practico.conf"
+# Se detecta si alguno de los componentes o ninguno ha sido instalado
+if [ -e $CONFFILE ]; then
+
+	# Construyo la lista de los componentes que tengo instalados, y otras dos
+	# con los datos que tengo que mostrar.
+	grep -e COMAND -e USERID -e FECINS $CONNFILE > "$CONNFILE.temp"
+	listaComponentesInstalados=( $(grep "COMAND =" "$CONNFILE.temp" | sed 's/COMAND =//g') )
+	listaUsuariosInstalados=( $(grep "USERID =" "$CONNFILE.temp" | sed 's/USERID =//g') )
+	listaFechasInstalados=( $(grep "FECINS =" "$CONNFILE.temp" | sed 's/FECINS =//g') )
 
 
 
-# Determino y muestro la lista de componentes instalados. Recorro la
-# lista de los componentes que tengo que instalar, y chequeo si se
-# encuentran instalados. En ese caso, muestro su informacion
-for componente in ${listaComponentesInstalar[@]}
-do
+	# Determino y muestro la lista de componentes instalados. Recorro la
+	# lista de los componentes que tengo que instalar, y chequeo si se
+	# encuentran instalados. En ese caso, muestro su informacion
+	for componente in ${listaComponentesInstalar[@]}; do
+		comparacion=$(elementExists $componente)
+		if [ $comparacion != "0" ]; then
+			unset ${listaComponentesInstalarFinal[$comparacion]}
+			echo "Comando $componente instalado el ${listaFechasInstalados[$comparacion]} por ${listaUsuariosInstalados[$comparacion]}"
+		fi
+	done
 
-	comparacion=$(elementExists $componente)
-	if [ $comparacion != "0" ]; then
-		unset ${listaComponentesInstalarFinal[$comparacion]}
-		echo "Comando $componente instalado el ${listaFechasInstalados[$comparacion]} por ${listaUsuariosInstalados[$comparacion]}"
-	fi
-done
+fi
 
 # Me fijo si hay que instalar algun componente. En caso de que no haya componentes
 # para instalar, salgo de la instalacion
 if [ ${#listaComponentesInstalarFinal[@]} -eq 0 ]; then
-	echo 	"Todos los componentes necesarios, se encuentran instalados.
-		la instalacion finalizara"
-	return 0
+	echo 	"Todos los componentes necesarios, se encuentran instalados. La instalacion finalizara"
+	exit 0
 fi
 
-# Muestro la lista de componentes que se instalaran, en caso de que
-# los existentes no sean instalados.
-unset $componente
-echo "Componentes a instalar"
-for componente in ${listaComponentesInstalarFinal[@]}
-	echo $componente
-done
-
-# Me fijo la version de PERL. Para que sea valido, tiene que ser mayor que la 5.
-# Para simplificar, uso el valor de la revision para comparar y almaceno la version
-
-version=$( perl -V:revision | cut -f2 -d"'" )
-ERRORPERL=1
-LEASTVERSION=5
-if [ $version -lt $LEASTVERSION]; then
-	echo "Atencion! Esta instalacion solo puede ejecutada si Perl 5 o superior esta instalado.\n	Efectúe la instalación de Perl y reinicie el proceso de instalación." | tee $LOGINSTALL
-	return $ERRORPERL
+if [ ${#listaComponentesInstalarFinal[@]} -eq ${#listaComponentesInstalar[@]} ]; then
+	echo 	"Se instalaran todos los componentes"
+else
+	# Muestro la lista de componentes que se instalaran, en caso de que
+	# los existentes no sean instalados.
+	unset $componente
+	echo "Componentes a instalar"
+	for componente in ${listaComponentesInstalarFinal[@]}; do
+		echo "$componente"
+	done
 fi
+
+# Defino los valores por defecto de las variables globales. En caso de ser modificados
+# y luego cancelada la instalacion, se mantienen los valores cargados
+BINDIR="$grupo/bin"
+DATADIR="$grupo/data"
+LOGDIR="$grupo/log"
+
+REPLY="No"
+while [ "$REPLY" == "No" ]; do
+
+	# Me fijo la version de PERL. Para que sea valido, tiene que ser mayor que la 5.
+	# Para simplificar, uso el valor de la revision para comparar y almaceno la version
+
+	version=$( perl -V:revision | cut -f2 -d"'" )
+	ERRORPERL=1
+	LEASTVERSION=5
+	if [ $version -lt $LEASTVERSION ]; then
+		echo "Atencion! Esta instalacion solo puede ejecutada si Perl 5 o superior esta instalado.\n	Efectúe la instalación de Perl y reinicie el proceso de instalación." | tee -a $LOGINSTALL
+		exit $ERRORPERL
+	fi
+	PERLVER=$( perl -V:version )
+
+
 	
+	# Defino el directorio de los ejecutablaes
+	read -p "Nombre del directorio de ejecutables: ($BINDIR) "
+	[ "$REPLY" != "" ] && BINDIR="$REPLY"
 
+	# Defino el directorio de los datos
+	read -p "Nombre del directorio de datos: ($DATADIR) "
+	[ "$REPLY" != "" ] && DATADIR="$REPLY"
 
+	# Guardo el espacio disponible
+	espacio=$( df -h "$grupo" | awk '{print $4}' | tail -n 1 )
+	echo "Espacio disponible en $DATADIR: $espacio" | tee -a $LOGINSTALL
+	DATASIZE=${espacio[@]:0:(${#espacio}-1)}
+	USIZE=${espacio[@]:(${#espacio}-1)}
+
+	# Le pregunto al usuario si quiere proseguir con la instalacion
+	while [ "$REPLY" != "Si" -a "$REPLY" != "No" ]; do
+		read -p "¿Desea continuar? (Si-No) "
+	done
+
+	# En caso de no recibir la respuesta esperada, salgo de la instalacion
+	if [ "$REPLY" == "No" ]; then
+		echo "Instalacion Cancelada" | tee -a $LOGINSTALL
+		exit 0
+	fi
+
+	# Defino el directorio de los logs
+	read -p "Nombre del directorio de log: ($LOGDIR) "
+	[ "$REPLY" != "" ] && LOGDIR="$REPLY"
+
+	# Defino el espacio maximo asignado para los logs
+	MAXLOGPOSSIBLE=$( echo "$DATASIZE / 100" | bc -l )
+	REPLY=0
+	while [ "$REPLY" -ge $MAXLOGPOSSIBLE -a "$REPLY" -eq 0 ]; do
+		read -p "Espacio máximo para archivos de log? ($MAXLOGPOSSIBLE $USIZE) "
+	done
+	MAXLOG=$REPLY
+
+	# Imprimo los parametros
+	echo "PARÁMETROS DE INSTALACION DE PRACTICO"
+	echo "Versión de Perl:   $PERLVER"
+	echo "Nombre del directorio de instalación:   $grupo/inst"
+	echo "Nombre del directorio de configuración: $grupo/conf"
+	echo "Nombre del directorio de ejecutables:   $BINDIR"
+	echo "Nombre del directorio de datos:         $DATADIR"
+	echo "Nombre del directorio de logs:          $LOGDIR"
+	echo "Espacio máximo para archivos de log:    $MAXLOG $USIZE"
+
+	while [ "$REPLY" != "Si" -a "$REPLY" != "No" ]; do
+		read -p "¿Continuar instalación? (Si-No) "
+	done
+done
