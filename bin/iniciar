@@ -1,10 +1,7 @@
 #! /bin/bash 
 
-INICIAR=$(basename iniciar)
-echo \$INICIAR=$INICIAR
-export INICIAR
-
-ENOENTORNO=14
+# Codigos de error
+EEXISTEENTORNO=14
 ENOINSTALADO=15
 
 # Funcion para imprimir por consola y al log
@@ -16,33 +13,88 @@ imprimir() {
 	fi
 }
 
+# Variables que deben estar definidas en practico.conf
+VARNECESARIAS=( \
+[0]=BINDIR \
+[1]=LOGDIR \
+[2]=DATADIR \
+[3]=MAXLOG \
+[4]=GRUPO )
+
 # El entorno puede inicializarse una sola vez en cada sesion de bash
 if [ $ENTORNO_INICIALIZADO ]; then
 
 	imprimir "Invocacion con el entorno ya inicializado" W
+
+	echo "Valores de las variables de entorno indispensables"
+	for VAR in ${VARNECESARIAS[*]}
+	do
+		echo \$$VAR = $(eval echo \$$VAR)
+	done
+	echo \$ARCHCONF = $ARCHCONF
+	echo \$CANLOOP = $CANLOOP
+	echo \$TESPERA = $TESPERA
 	
-	# TODO Mostrar los valores de las variables de entorno
+	echo
 	
 	# Se muestra el PID de detectar, si es que esta corriendo
 	DETPID=$(expr "$(ps | grep detectar)" : '\ \([^\ ]*\)\ .*')
 	if [ ! -z "$DETPID" ]; then
-		echo "PID de detectar: $DETPID"
+		imprimir "PID de detectar: $DETPID"
 	fi
 	
-	return $ENOENTORNO
+	return $EEXISTEENTORNO
 fi
 
-# TODO Ejecutando ". iniciar" no funciona, ¿deben leerse de practico.conf?
-# Se obtiene el nombre del directorio del grupo. Este sera
-#+siempre el padre de bin, el directorio del presente script
-export GRUPO=$(cd $(dirname iniciar)/..; pwd)
+# la ubicacion de practico.conf relativa a iniciar es fija
+export ARCHCONF=../conf/practico.conf
+
+# El archivo de configuracion practico.conf debe existir
+if [ ! -e $ARCHCONF ] || [ -d $ARCHCONF ]; then
+	imprimir "Archivo de configuracion $ARCHCONF inexistente, instalacion corrupta"
+	return $ENOINSTALADO
+fi
+
+# Se exportan las variables del archivo de configuracion
+LINEAS=$(wc -l <$ARCHCONF)
+(( LINEAS += 1 ))
+CUENTA=0
+{ # Se procesa el archivo de configuracion linea por linea
+while [ $CUENTA -lt $LINEAS ]
+do
+	(( CUENTA += 1))
+	
+	# Se lee linea por linea el archivo de configuracion
+	read LINEA
+	# Si la linea esta vacia o comentada se saltea
+	if [ ${#LINEA} -lt 1 -o "${LINEA:0:1}" = "#" ]; then
+		(( REGISTROS -= 1 ))
+		continue
+	fi
+	
+	# Se exporta la variable definida en la linea
+	echo $LINEA	
+	export $LINEA 2>/dev/null
+	if [ ! $? -eq 0 ]; then
+		imprimir "Error de sintaxis en $ARCHCONF en la linea $CUENTA"
+	fi
+done
+} <$ARCHCONF
+
+# Se chequea que el archivo practico.conf este completo
+for VAR in ${VARNECESARIAS[*]}
+do
+	# Referencia indirecta a la variable cuyo nombre es $VAR
+	if [ -z $(eval echo \$$VAR) ]; then
+		imprimir "No existe la de entorno $VAR"	
+	fi
+done
+
 # Se agrega el directorio bin al PATH para poder ejecutar las demas funciones
-export BINDIR=$GRUPO/bin
 export PATH=$PATH:$BINDIR
-# Se exportan estas variables para poder invocar a glog
-export LOGDIR=$GRUPO/log
+# Se exporta esta variable para poder invocar a glog. Si la ejecucion
+#+de iniciar es erronea ENTORNO_INICIALIZADO se "unsetea".
 export ENTORNO_INICIALIZADO=1
-export MAXLOG=1024
 
 imprimir "Inicializando entorno"
 
@@ -61,6 +113,7 @@ NECESARIOS=( [0]="$GRUPO/bin/mover" \
 [10]="$GRUPO/conf/practico.conf" \
 )
 
+unset NOINST
 # ${!a[*]} expande a todos los índices del array a.
 # No se puede usar for arch in ${a[*]}, que directamente iteraría en todos los 
 # elementos del array porque los elementos pueden contener espacios.
@@ -75,16 +128,8 @@ done
 if [ $NOINST ]; then
 	imprimir "Imposible iniciar el entorno: Instalacion fallida o corrupta" SE
 	unset ENTORNO_INICIALIZADO
-	# TODO Los exit cierran la consola al ejecutar como ". iniciar", ¿como puede 
-	# solucionarse?
-	# Demian - Lamentablemente, creo que no usándolos es la forma de solucionarlo.
-	# En la versión primitiva de este script me había encontrado con ese problema
-	# y lo que hice fue en vez de temrinar abruptamente en algún lado, usar un 
-	# esle y meter toda la funcionalidad del script ahí.
 	return $ENOINSTALADO
 fi
-
-
 
 # Se solicita por pantalla la cantidad de ciclos de detectar
 while [[ "$CANLOOP" -lt 1 ]] 2>/dev/null
@@ -114,12 +159,25 @@ do
 	let TESPERA="$TESPERA"*1 2>/dev/null
 done
 
+# Se exportan las variables necesarias para ejecutar detectar
 export CANLOOP
 export TESPERA
 
-# TODO Preguntar si se quiere correr detectar,
-#+caso negativo explicar la invocacion manual
-# Corre detectar en modo background.
-detectar &
+# Se da la opcion de iniciar detectar si no se esta ejecutando
+if [ $(ps -e | grep detectar | wc -l) -eq 0 ]; then
+	while [[ "$OPCDETECTAR" != [snSN] ]]
+	do
+		echo -n "¿Desea efectuar la activacion de DETECTAR? (S/N) "
+		read OPCDETECTAR
+	done
+	
+	if [[ "$OPCDETECTAR" = [sS] ]]; then
+		detectar >/dev/null v&
+		imprimir "Demonio corriendo bajo el no.: $!"
+	else
+		echo "Para realizar la activacion del comando DETECTAR en segundo plano"
+		echo "debe ingresar \"detectar &\" en una consola con el entorno iniciado."
+	fi
+fi
 
-imprimir "Entorno inicializado correctamente"
+imprimir "Entorno inicializado correctamente, iniciar terminado"
