@@ -118,6 +118,7 @@ uso() {
 	echo "-A	filtra por anio"
 	echo "-l	filtra por tipo de mensaje de log( SE, E, I, W )"
 	echo "-c	filtra por tipo de comando"
+	echo "-b	no muestra de que archivos son los match"
 	echo "-h	muestra esta ayuda"
 }
 
@@ -159,7 +160,9 @@ dia=..
 hora=..
 minuto=..
 
-while getopts “l:H:m:D:M:A:c:h” OPTION
+MOSTRARARCHIVO=
+
+while getopts “l:H:m:D:M:A:c:h:b” OPTION
 do
 	case $OPTION in
 
@@ -205,7 +208,11 @@ do
 	c)
 	PARAM_COMANDO=$OPTARG
 	;;
-        
+
+	b)
+	  MOSTRARARCHIVO="-h"
+	;;
+      
 	?)
 	uso
 	exit 0
@@ -217,8 +224,8 @@ done
 #LOGDIR=../log
 
 if [ $PARAM_COMANDO ]; then
-	egrep  "$anio/$mes/$dia $hora:$minuto:..-$tipolog" "$LOGDIR/$PARAM_COMANDO.log"
+	egrep  $MOSTRARARCHIVO "$anio/$mes/$dia $hora:$minuto:..-$tipolog" "$LOGDIR/$PARAM_COMANDO.log"
 else
-	egrep  "$anio/$mes/$dia $hora:$minuto:..-$tipolog" "$LOGDIR/"*
+	egrep $MOSTRARARCHIVO "$anio/$mes/$dia $hora:$minuto:..-$tipolog" "$LOGDIR/"*
 fi
 
