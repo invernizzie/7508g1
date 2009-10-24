@@ -73,7 +73,7 @@ do
 	fi
 	
 	# Se exporta la variable definida en la linea
-	export $LINEA 2>/dev/null
+	export "$LINEA" #2>/dev/null
 	if [ ! $? -eq 0 ]; then
 		imprimir "Error de sintaxis en $ARCHCONF en la linea $CUENTA"
 	fi
@@ -84,13 +84,13 @@ done
 for VAR in ${VARNECESARIAS[*]}
 do
 	# Referencia indirecta a la variable cuyo nombre es $VAR
-	if [ -z $(eval echo \$$VAR) ]; then
+	if [ -z "$(eval echo \$$VAR)" ]; then
 		imprimir "No existe la de entorno $VAR"	
 	fi
 done
 
 # Se agrega el directorio bin al PATH para poder ejecutar las demas funciones
-export PATH=$PATH:$BINDIR
+export PATH="$PATH:$BINDIR"
 # Se exporta esta variable para poder invocar a glog. Si la ejecucion
 #+de iniciar es erronea ENTORNO_INICIALIZADO se "unsetea".
 export ENTORNO_INICIALIZADO=1
@@ -157,6 +157,9 @@ do
 	# Workaround para obligar a que sea un entero
 	let TESPERA="$TESPERA"*1 2>/dev/null
 done
+
+# Se cambia la unidad de TESPERA de minutos a segundos
+(( TESPERA *= 60 ))
 
 # Se exportan las variables necesarias para ejecutar detectar
 export CANLOOP
