@@ -173,24 +173,24 @@ transformar_alfanumericos(){
 	LONGITUD_NO_CONTRAT=$( echo $NO_CONTRATF| cut -d '$' -f 2| cut -d '.' -f 1)
 	
 	# Valida que no se superen las longitudes maximas, si es asi termina la ejecucion con un error de formato
-	if [ $LONGITUD_CD_STATCTB -lt ${#CD_STATCTBL} ]; then
+	if [ ${#CD_STATCTBL} -gt $LONGITUD_CD_STATCTB ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
 	fi
-	if [ $LONGITUD_NO_CONTRAT -lt ${#NO_CONTRATL} ]; then
+	if [ ${#NO_CONTRATL} -gt $LONGITUD_NO_CONTRAT ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
 	fi
 	
 	# Transforma el estado contable al formato correspondiente
 	if [ "$CD_STATCTBL" = "SNA" ] || [ "$CD_STATCTBL" = "SNIM" ]; then		
-		CD_STATCTB=$( echo "Sanos" )
+		CD_STATCTB="SANOS"
 	fi
 	if [ "$CD_STATCTBL" = "DTCA" ] || [ "$CD_STATCTBL" = "DTXA" ]; then		
-		CD_STATCTB=$( echo "Dudosos" )
+		CD_STATCTB="DUDOSOS"
 	fi
 	if [ "$CD_STATCTBL" = "CTX" ]; then		
-		CD_STATCTB=$( echo "CTX" )
+		CD_STATCTB="CTX"
 	fi		
 	
 	# Transforma el numero de contrato al formato correspondiente
@@ -242,11 +242,11 @@ transformar_numericos(){
 	# Obtiene la parte entera y decimal del monto de credito y valida que no se superen las longitudes maximas, si es asi se sale con un error de formato
 	E_MT_CRD=$( echo $MT_CRDL| cut -d $SEPDECIMAL -f 1 )
 	D_MT_CRD=$( echo $MT_CRDL| cut -d $SEPDECIMAL -f 2 )
-	if [ $LONGMAXE_MT_CRD -lt ${#E_MT_CRD} ]; then
+	if [ ${#E_MT_CRD} -gt $LONGMAXE_MT_CRD ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
 	fi
-	if [ $LONGMAXD_MT_CRD -lt ${#D_MT_CRD} ]; then
+	if [ ${#D_MT_CRD} -gt $LONGMAXD_MT_CRD ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
 	fi
@@ -254,11 +254,11 @@ transformar_numericos(){
 	# Obtiene la parte entera y decimal del monto impago y valida que no se superen las longitudes maximas, si es asi se sale con un error de formato
 	E_MT_IMPAGO=$( echo $MT_IMPAGOL| cut -d $SEPDECIMAL -f 1 )
 	D_MT_IMPAGO=$( echo $MT_IMPAGOL| cut -d $SEPDECIMAL -f 2 )
-	if [ $LONGMAXE_MT_IMPAGO -lt ${#E_MT_IMPAGO} ]; then
+	if [ ${#E_MT_IMPAGO} -gt  $LONGMAXE_MT_IMPAGO ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
 	fi
-	if [ $LONGMAXD_MT_IMPAGO -lt ${#D_MT_IMPAGO} ]; then
+	if [ ${#D_MT_IMPAGO} -gt $LONGMAXD_MT_IMPAGO ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
 	fi
@@ -266,11 +266,11 @@ transformar_numericos(){
 	# Obtiene la parte entera y decimal del monto de otras sumas y valida que no se superen las longitudes maximas, si es asi se sale con un error de formato
 	E_MT_OTRSUMDC=$( echo $MT_OTRSUMDCL| cut -d $SEPDECIMAL -f 1 )
 	D_MT_OTRSUMDC=$( echo $MT_OTRSUMDCL| cut -d $SEPDECIMAL -f 2 )
-	if [ $LONGMAXE_MT_OTRSUMDC -lt ${#E_MT_OTRSUMDC} ]; then
+	if [ ${#E_MT_OTRSUMDC} -gt $LONGMAXE_MT_OTRSUMDC ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
 	fi
-	if [ $LONGMAXD_MT_OTRSUMDC -lt ${#D_MT_OTRSUMDC} ]; then
+	if [ ${#D_MT_OTRSUMDC} -gt $LONGMAXD_MT_OTRSUMDC ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
 	fi
@@ -278,11 +278,11 @@ transformar_numericos(){
 	# Obtiene la parte entera y decimal del monto devengado y valida que no se superen las longitudes maximas, si es asi se sale con un error de formato
 	E_MT_INDE=$( echo $MT_INDEL| cut -d $SEPDECIMAL -f 1 )
 	D_MT_INDE=$( echo $MT_INDEL| cut -d $SEPDECIMAL -f 2 )
-	if [ $LONGMAXE_MT_INDE -lt ${#E_MT_INDE} ]; then
+	if [ ${#E_MT_INDE} -gt $LONGMAXE_MT_INDE ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
 	fi
-	if [ $LONGMAXD_MT_INDE -lt ${#D_MT_INDE} ]; then
+	if [ ${#D_MT_INDE} -gt $LONGMAXD_MT_INDE ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
 	fi
@@ -290,49 +290,49 @@ transformar_numericos(){
 	# Obtiene la parte entera y decimal del monto no devengado y valida que no se superen las longitudes maximas, si es asi se sale con un error de formato
 	E_MT_INNODE=$( echo $MT_INNODEL| cut -d $SEPDECIMAL -f 1 )
 	D_MT_INNODE=$( echo $MT_INNODEL| cut -d $SEPDECIMAL -f 2 )
-	if [ $LONGMAXE_MT_INNODE -lt ${#E_MT_INNODE} ]; then
+	if [ ${#E_MT_INNODE} -gt $LONGMAXE_MT_INNODE ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
 	fi
-	if [ $LONGMAXD_MT_INNODE -lt ${#D_MT_INNODE} ]; then
+	if [ ${#D_MT_INNODE} -gt $LONGMAXD_MT_INNODE ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
 	fi
 	
 	# Si el entero o el decimal estan vacios se los pone en cero
 	if [ "$E_MT_CRD" = "" ]; then		
-		E_MT_CRD=$( echo '0')	
+		E_MT_CRD=0
 	fi
 	if [ "$D_MT_CRD" = "" ]; then		
-		D_MT_CRD=$( echo '0')	
+		D_MT_CRD=0
 	fi
 	
 	if [ "$E_MT_IMPAGO" = "" ]; then		
-		E_MT_IMPAGO=$( echo '0')	
+		E_MT_IMPAGO=0
 	fi
 	if [ "$D_MT_IMPAGO" = "" ]; then		
-		D_MT_IMPAGO=$( echo '0')	
+		D_MT_IMPAGO=0
 	fi
 	
 	if [ "$E_MT_OTRSUMDC" = "" ]; then		
-		E_MT_OTRSUMDC=$( echo '0')	
+		E_MT_OTRSUMDC=0	
 	fi
 	if [ "$D_MT_OTRSUMDC" = "" ]; then		
-		D_MT_OTRSUMDC=$( echo '0')	
+		D_MT_OTRSUMDC=0
 	fi
 	
 	if [ "$E_MT_INDE" = "" ]; then		
-		E_MT_INDE=$( echo '0')	
+		E_MT_INDE=0	
 	fi
 	if [ "$D_MT_INDE" = "" ]; then		
-		D_MT_INDE=$( echo '0')	
+		D_MT_INDE=0
 	fi
 	
 	if [ "$E_MT_INNODE" = "" ]; then		
-		E_MT_INNODE=$( echo '0')	
+		E_MT_INNODE=0
 	fi
 	if [ "$D_MT_INNODE" = "" ]; then		
-		D_MT_INNODE=$( echo '0')	
+		D_MT_INNODE=0	
 	fi
 	
 	# Forma los numeros en el formato para sumar
@@ -349,10 +349,10 @@ transformar_numericos(){
 	D_MT_RESTANTE=$( echo $MT_RESTANTE| cut -d '.' -f 2 )
 	# Si el entero o el decimal estan vacios se los pone en cero
 	if [ "$E_MT_RESTANTE" = "" ]; then		
-		E_MT_RESTANTE=$( echo '0')
+		E_MT_RESTANTE=0
 	fi
 	if [ "$D_MT_RESTANTE" = "" ]; then		
-		D_MT_RESTANTE=$( echo '0')	
+		D_MT_RESTANTE=0	
 	fi
 	
 	# Transforma cada monto al formato correspondiente (corta los primeros 10 caracteres de la parte entera y los 2 primeros caracteres de la parte decimal) y 		los une con una coma en el medio
@@ -430,14 +430,14 @@ do
 	
 	# Si el archivo ya se proceso entonces se pasa al directorio nok, sino se trabaja con el mismo	
 	if validar_repetido $DIROK/$ARCHIVOOK; then
-		mover "$DIROK/$ARCHIVOOK" $DIRNOK $INTERPRETE
+		mover "$DIROK/$ARCHIVOOK" $DIRNOK interprete
 		imprimir "Duplicado: $ARCHIVOOK" I
 	else
 		obtener_pais_sistema_anio_mes $ARCHIVOOK		
 		determinar_separadores
 		determinar_campos
 		procesar $DIROK/$ARCHIVOOK
-		mover "$DIROK/$ARCHIVOOK" $DIROLD $INTERPRETE
+		mover "$DIROK/$ARCHIVOOK" $DIROLD interprete
 		imprimir "Registros de Input: $CUENTA. Registros  de Output: $GRABADOS" I
 	fi
 done
