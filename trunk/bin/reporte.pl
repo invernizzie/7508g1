@@ -11,6 +11,10 @@ $grabarModificaciones = 0;
 $archivoListados = "Listados.txt";
 $archivoModificaciones = "Modificaciones.txt";
 
+# Paises y sistemas válidos.
+%paisesValidos;
+%sistemasValidos;
+
 # Valida que el entorno esté inicializado y aborta la ejecución con error en 
 # caso de ser así.
 sub validarEntorno {
@@ -20,6 +24,43 @@ sub validarEntorno {
     exit 1;
   }
 }
+
+# Inicializa las varibles gobales %paisesValidos y %sistemasValidos a partir del
+# archivo p-s.tab.
+sub inicializarPaisesSistemasValidos {
+  
+  # TODO obtener el nombre de archivo a partir de la varible de entorno DATADIR.
+  my $filename = "../conf/p-s.tab";
+  open (PSTAB, $filename) || die "No se pudo abrir el archivo $filename";
+  
+  my (%paises, %sistemas);
+  while (my $linea = <PSTAB>) {
+    chomp ($linea);
+    my @psReg = split("-", $linea);
+    $paises  {$psReg[0]} = $psReg[1];
+    $sistemas{$psReg[2]} = $psReg[3];
+  }
+  
+  close (PSTAB);
+  
+  %paisesValidos = %paises;
+  %sistemasValidos = %sistemas;
+}
+
+sub mostrarPaisesValidos {
+  print "    Paises Validos \n";
+  foreach my $idPais (keys(%paisesValidos)) {
+    print "      $idPais: ".$paisesValidos{$idPais}."\n";
+  }
+}
+
+sub mostrarSistemasValidos {
+  print "    Sistemas Validos:\n";
+  foreach my $idSist (keys(%sistemasValidos)) {
+    print "      $idSist: ".$sistemasValidos{$idSist}."\n";
+  }
+}
+
 
 # No valida nada.
 sub validacionNula{
@@ -31,14 +72,14 @@ sub validacionNula{
 sub validarPais {
   
   my $pais = @_[0];
-  return $pais;
+  return exists ($paisesValidos{$pais}) ? $pais : "";
 } 
 
 # TODO
 sub validarSistema{
   
   my $sistema = @_[0];
-  return $sistema;
+  return exists ($sistemasValidos{$sistema}) ? $sistema : "";
 }
 
 # Se permiten todos los anios mayores a 1900.
@@ -59,17 +100,20 @@ sub validarMes{
 # función de validación.
 sub cargaParametro{
 
-  my ($parametro, $validacion) = @_;
-  my $respuesta;
+  my ($parametro, $validacion, $mostrarValidos) = @_;
+  my ($respuesta, $respuestaValidada);
 
-  while (!$respuesta){
+  while (!$respuestaValidada){
     
     print "    Ingrese el $parametro: ";
     $respuesta = <STDIN>;
     chop($respuesta);
-    $respuesta = &$validacion($respuesta);
-    if (!$respuesta) {
-	    print "    El $parametro es invalido =(\n";
+    $respuestaValidada = &$validacion($respuesta);
+    if (!$respuestaValidada) {
+	    print "    El $parametro \"$respuesta\" es invalido =(\n";
+	    if ($mostrarValidos) {
+	      &$mostrarValidos();
+	    }
     }
   }
   return $respuesta;
@@ -79,7 +123,7 @@ sub cargaParametro{
 # Permite la carga de parametros opcionales como el sistema, anio y mes.
 sub cargaParametroOpcional{
   
-  my ($parametro, $validacion) = @_;
+  my ($parametro, $validacion, $mostrarValidos) = @_;
   my $opcion;
   my $respuesta;
   
@@ -94,15 +138,16 @@ sub cargaParametroOpcional{
     return $respuesta;
   }
 
-  return &cargaParametro($parametro,$validacion);
+  return &cargaParametro($parametro,$validacion, $mostrarValidos);
 }
 
 
 # Cargar parametros de consulta (Pais, Sistema, Anio y Mes)
 sub cargarParametrosDeConsulta{
 
-  my $pais = &cargaParametro("pais","validarPais");
-  my $sistema = &cargaParametroOpcional("sistema","validarSistema");
+  my $pais = &cargaParametro("pais","validarPais", "mostrarPaisesValidos");
+  my $sistema = &cargaParametroOpcional("sistema","validarSistema", 
+                                        "mostrarSistemasValidos");
   my $anio;
   my $mes;
 
@@ -192,7 +237,13 @@ sub procesarConsulta{
     $montoContrato += @entrada[2];
   }
 
-  return $cantidadContratos > 0 ?  $consulta = join("-",@filtros,$cantidadContratos,@entrada[0],@entrada[1],$montoContrato,$montoMaestro) : ""; 
+  if ($cantidadContratos > 0) {
+    return join("-",@filtros,$cantidadContratos,@entrada[0,1],$montoContrato,
+                $montoMaestro);
+  }
+  else {
+    return "";
+  }  
 }
 
 sub procesarModificacion{
@@ -215,9 +266,7 @@ sub procesarModificacion{
     
     @entradaMaestro = split("-",$ppiFiltrado{$nContrato});
     
-    $modificacion = $modificacion.join("-",@entradaMaestro[1],@entradaMaestro[2],@entradaMaestro[3],$nContrato,@entradaMaestro[8],
-                         @entradaMaestro[6],@entradaMaestro[10],@entradaMaestro[11],@entradaMaestro[12],@entradaMaestro[13],
-                         @entradaMaestro[14],@entradaConsulta[3],$fecha,$usId)."\n";
+    $modificacion = $modificacion.join("-", @entradaMaestro[1,2,3,8,6,10,11,12,13,14], @entradaConsulta[3],$fecha,$usId)."\n";
   }
   
   return $modificacion;
@@ -230,6 +279,8 @@ sub realizarConsulta{
   my $pais = $_[0];
   my $key;
 
+  # TODO Obtener las rutas de los archivos a partir de la variable de entorno
+  # DATADIR.
   my %ppiFiltrado = &filtrarArchivo("PPI.mae","filtroArchivoMaestro",@filtrosPPI);
   my %contratosFiltrado = &filtrarArchivo("CONTRAT.$pais","filtroArchivoContratos",@filtrosContrato);
   my (@consA, @consB, @consC, @consD, @consE1, @consE2, @consF1, @consF2); 
@@ -251,20 +302,21 @@ sub realizarConsulta{
     
       my ($estadoContrato, $montoContrato) = @arrayContrato[5,11];
       
-      $lineaConsulta = $estadoContrato."-".$estadoMaestro."-".$montoContrato."-".$montoMaestro."-".$key;
+      $lineaConsulta = join("-", $estadoContrato, $estadoMaestro, 
+                            $montoContrato, $montoMaestro, $key);
       $igualMonto = ($montoMaestro == $montoContrato);
   
       if (($estadoMaestro eq "SANO") && ($estadoContrato eq "SANO")){
-	 $igualMonto ? push(@consA,$lineaConsulta) : push(@consC,$lineaConsulta);
+        $igualMonto ? push(@consA,$lineaConsulta) : push(@consC,$lineaConsulta);
       }
       elsif (($estadoMaestro eq "DUDOSO") && ($estadoContrato eq "DUDOSO")){
-	 $igualMonto ? push(@consB,$lineaConsulta) : push(@consD,$lineaConsulta);
+	      $igualMonto ? push(@consB,$lineaConsulta) : push(@consD,$lineaConsulta);
       }
       elsif (($estadoMaestro eq "SANO") && ($estadoContrato eq "DUDOSO")){
-	 $igualMonto ? push(@consE2,$lineaConsulta) : push(@consF2,$lineaConsulta);
+	      $igualMonto ? push(@consE2,$lineaConsulta) : push(@consF2,$lineaConsulta);
       }
       elsif (($estadoMaestro eq "DUDOSO") && ($estadoContrato eq "SANO")){
-	 $igualMonto ? push(@consE1,$lineaConsulta) : push(@consF1,$lineaConsulta);	
+	      $igualMonto ? push(@consE1,$lineaConsulta) : push(@consF1,$lineaConsulta);	
       }
 
    }
@@ -357,6 +409,6 @@ sub menu{
 
 # Bloque principal.
 #&validarEntorno();
+&inicializarPaisesSistemasValidos();
 &menu();
-#($pais,$sistema,$anio,$mes) = &cargarParametrosDeConsulta();
-#&realizarConsulta($pais,$sistema,$anio,$mes);
+
