@@ -7,10 +7,10 @@ ENOINSTALADO=15
 # Funcion para imprimir por consola y al log
 # Uso: imprimir mensaje [tipo]
 imprimir() {
-	echo $1
-	if [ $ENTORNO_INICIALIZADO ]; then
-		glog "$INICIAR" $2 "$1"
-	fi
+    echo $1
+    if [ $ENTORNO_INICIALIZADO ]; then
+        glog "$INICIAR" $2 "$1"
+    fi
 }
 
 # Variables que deben estar definidas en practico.conf
@@ -24,26 +24,26 @@ VARNECESARIAS=( \
 # El entorno puede inicializarse una sola vez en cada sesion de bash
 if [ $ENTORNO_INICIALIZADO ]; then
 
-	imprimir "Invocacion con el entorno ya inicializado" W
+    imprimir "Invocacion con el entorno ya inicializado" W
 
-	echo "Valores de las variables de entorno indispensables"
-	for VAR in ${VARNECESARIAS[*]}
-	do
-		echo \$$VAR = $(eval echo \$$VAR)
-	done
-	echo \$ARCHCONF = $ARCHCONF
-	echo \$CANLOOP = $CANLOOP
-	echo \$TESPERA = $TESPERA
-	
-	echo
-	
-	# Se muestra el PID de detectar, si es que esta corriendo
-	DETPID=$(expr "$(ps | grep detectar)" : '\ \([^\ ]*\)\ .*')
-	if [ ! -z "$DETPID" ]; then
-		imprimir "PID de detectar: $DETPID"
-	fi
-	
-	return $EEXISTEENTORNO
+    echo "Valores de las variables de entorno indispensables"
+    for VAR in ${VARNECESARIAS[*]}
+    do
+        echo \$$VAR = $(eval echo \$$VAR)
+    done
+    echo \$ARCHCONF = $ARCHCONF
+    echo \$CANLOOP = $CANLOOP
+    echo \$TESPERA = $TESPERA
+    
+    echo
+    
+    # Se muestra el PID de detectar, si es que esta corriendo
+    DETPID=$(expr "$(ps | grep detectar)" : '\ \([^\ ]*\)\ .*')
+    if [ ! -z "$DETPID" ]; then
+        imprimir "PID de detectar: $DETPID"
+    fi
+    
+    return $EEXISTEENTORNO
 fi
 
 # la ubicacion de practico.conf relativa a iniciar es fija
@@ -51,8 +51,8 @@ export ARCHCONF=../conf/practico.conf
 
 # El archivo de configuracion practico.conf debe existir
 if [ ! -e $ARCHCONF ] || [ -d $ARCHCONF ]; then
-	imprimir "Archivo de configuracion $ARCHCONF inexistente, instalacion corrupta"
-	return $ENOINSTALADO
+    imprimir "Archivo de configuracion $ARCHCONF inexistente, instalacion corrupta"
+    return $ENOINSTALADO
 fi
 
 # Se exportan las variables del archivo de configuracion
@@ -62,31 +62,31 @@ CUENTA=0
 { # Se procesa el archivo de configuracion linea por linea
 while [ $CUENTA -lt $LINEAS ]
 do
-	(( CUENTA += 1))
-	
-	# Se lee linea por linea el archivo de configuracion
-	read LINEA
-	# Si la linea esta vacia o comentada se saltea
-	if [ ${#LINEA} -lt 1 -o "${LINEA:0:1}" = "#" ]; then
-		(( REGISTROS -= 1 ))
-		continue
-	fi
-	
-	# Se exporta la variable definida en la linea
-	export "$LINEA" #2>/dev/null
-	if [ ! $? -eq 0 ]; then
-		imprimir "Error de sintaxis en $ARCHCONF en la linea $CUENTA"
-	fi
+    (( CUENTA += 1))
+    
+    # Se lee linea por linea el archivo de configuracion
+    read LINEA
+    # Si la linea esta vacia o comentada se saltea
+    if [ ${#LINEA} -lt 1 -o "${LINEA:0:1}" = "#" ]; then
+        (( REGISTROS -= 1 ))
+        continue
+    fi
+    
+    # Se exporta la variable definida en la linea
+    export "$LINEA" #2>/dev/null
+    if [ ! $? -eq 0 ]; then
+        imprimir "Error de sintaxis en $ARCHCONF en la linea $CUENTA"
+    fi
 done
 } <$ARCHCONF
 
 # Se chequea que el archivo practico.conf este completo
 for VAR in ${VARNECESARIAS[*]}
 do
-	# Referencia indirecta a la variable cuyo nombre es $VAR
-	if [ -z "$(eval echo \$$VAR)" ]; then
-		imprimir "No existe la de entorno $VAR"	
-	fi
+    # Referencia indirecta a la variable cuyo nombre es $VAR
+    if [ -z "$(eval echo \$$VAR)" ]; then
+        imprimir "No existe la de entorno $VAR"    
+    fi
 done
 
 # Se agrega el directorio bin al PATH para poder ejecutar las demas funciones
@@ -118,44 +118,44 @@ unset NOINST
 # elementos del array porque los elementos pueden contener espacios.
 for i in ${!NECESARIOS[*]}
 do
-	if [ ! -e "${NECESARIOS[i]}" ]; then
-		imprimir "El archivo indispensable ${NECESARIOS[i]} no esta presente" SE
-		NOINST=1
-	fi
+    if [ ! -e "${NECESARIOS[i]}" ]; then
+        imprimir "El archivo indispensable ${NECESARIOS[i]} no esta presente" SE
+        NOINST=1
+    fi
 done
 
 if [ $NOINST ]; then
-	imprimir "Imposible iniciar el entorno: Instalacion fallida o corrupta" SE
-	unset ENTORNO_INICIALIZADO
-	return $ENOINSTALADO
+    imprimir "Imposible iniciar el entorno: Instalacion fallida o corrupta" SE
+    unset ENTORNO_INICIALIZADO
+    return $ENOINSTALADO
 fi
 
 # Se solicita por pantalla la cantidad de ciclos de detectar
 while [[ "$CANLOOP" -lt 1 ]] 2>/dev/null
 do
-	echo -n "Cantidad de Ciclos de DETECTAR? (100 ciclos) "
-	read CANLOOP
-	
-	if [ ${#CANLOOP} -eq 0 ]; then
-		CANLOOP=100
-	fi
-	
-	# Workaround para obligar a que sea un entero
-	let CANLOOP="$CANLOOP"*1 2>/dev/null
+    echo -n "Cantidad de Ciclos de DETECTAR? (100 ciclos) "
+    read CANLOOP
+    
+    if [ ${#CANLOOP} -eq 0 ]; then
+        CANLOOP=100
+    fi
+    
+    # Workaround para obligar a que sea un entero
+    let CANLOOP="$CANLOOP"*1 2>/dev/null
 done
 
 # Se solicita por pantalla el tiempo de espera por ciclo de detectar
 while [[ "$TESPERA" -lt 1 ]] 2>/dev/null
 do
-	echo -n "Tiempo de espera entre ciclos? (1 minuto) "
-	read TESPERA
-	
-	if [ ${#TESPERA} -eq 0 ]; then
-		TESPERA=1
-	fi
-	
-	# Workaround para obligar a que sea un entero
-	let TESPERA="$TESPERA"*1 2>/dev/null
+    echo -n "Tiempo de espera entre ciclos? (1 minuto) "
+    read TESPERA
+    
+    if [ ${#TESPERA} -eq 0 ]; then
+        TESPERA=1
+    fi
+    
+    # Workaround para obligar a que sea un entero
+    let TESPERA="$TESPERA"*1 2>/dev/null
 done
 
 # Se cambia la unidad de TESPERA de minutos a segundos
@@ -167,19 +167,19 @@ export TESPERA
 
 # Se da la opcion de iniciar detectar si no se esta ejecutando
 if [ $(ps -e | grep detectar | wc -l) -eq 0 ]; then
-	while [[ "$OPCDETECTAR" != [snSN] ]]
-	do
-		echo -n "¿Desea efectuar la activacion de DETECTAR? (S/N) "
-		read OPCDETECTAR
-	done
-	
-	if [[ "$OPCDETECTAR" = [sS] ]]; then
-		detectar >/dev/null v&
-		imprimir "Demonio corriendo bajo el no.: $!"
-	else
-		echo "Para realizar la activacion del comando DETECTAR en segundo plano"
-		echo "debe ingresar \"detectar &\" en una consola con el entorno iniciado."
-	fi
+    while [[ "$OPCDETECTAR" != [snSN] ]]
+    do
+        echo -n "¿Desea efectuar la activacion de DETECTAR? (S/N) "
+        read OPCDETECTAR
+    done
+    
+    if [[ "$OPCDETECTAR" = [sS] ]]; then
+        detectar >/dev/null v&
+        imprimir "Demonio corriendo bajo el no.: $!"
+    else
+        echo "Para realizar la activacion del comando DETECTAR en segundo plano"
+        echo "debe ingresar \"detectar &\" en una consola con el entorno iniciado."
+    fi
 fi
 
 imprimir "Entorno inicializado correctamente, iniciar terminado"
