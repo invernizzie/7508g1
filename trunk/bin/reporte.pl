@@ -3,6 +3,7 @@
 use Switch;
 
 # Variables global.
+$usId = "yo";
 $pais = "A";
 $sistema = 6;
 $grabarListados = 0;
@@ -31,7 +32,7 @@ sub validarPais {
   
   my $pais = @_[0];
   return $pais;
-}
+} 
 
 # TODO
 sub validarSistema{
@@ -196,14 +197,30 @@ sub procesarConsulta{
 
 sub procesarModificacion{
 
-  my ($consC,$consE1,$consF1,$ppiFiltrado) = @_;
+  my ($rCons,$rPpiFiltrado) = @_;
   my $key;
-# 
-#   print "Anda $ppiFiltrado->[] \n";
-#   
-#   foreach $key (keys($ppiFiltrado)) {
-#     print "Anda";
-#   }
+  my $modificacion;
+
+  my ($seg, $min, $hora, $dia, $mes, $anho, @zape) = localtime(time);
+  my $fecha = $dia."/".$mes."/".$anho;   
+
+  my @cons = @$rCons;
+  my %ppiFiltrado = %$rPpiFiltrado;
+  my (@entradaConsulta,@entradaMaestro);
+
+  foreach my $elemento (@cons){
+    
+    @entradaConsulta = split("-",$elemento);
+    my $nContrato = @entradaConsulta[4];
+    
+    @entradaMaestro = split("-",$ppiFiltrado{$nContrato});
+    
+    $modificacion = $modificacion.join("-",@entradaMaestro[1],@entradaMaestro[2],@entradaMaestro[3],$nContrato,@entradaMaestro[8],
+                         @entradaMaestro[6],@entradaMaestro[10],@entradaMaestro[11],@entradaMaestro[12],@entradaMaestro[13],
+                         @entradaMaestro[14],@entradaConsulta[3],$fecha,$usId)."\n";
+  }
+  
+  return $modificacion;
 }
 
 sub realizarConsulta{
@@ -234,7 +251,7 @@ sub realizarConsulta{
     
       my ($estadoContrato, $montoContrato) = @arrayContrato[5,11];
       
-      $lineaConsulta = $estadoContrato."-".$estadoMaestro."-".$montoContrato."-".$montoMaestro;
+      $lineaConsulta = $estadoContrato."-".$estadoMaestro."-".$montoContrato."-".$montoMaestro."-".$key;
       $igualMonto = ($montoMaestro == $montoContrato);
   
       if (($estadoMaestro eq "SANO") && ($estadoContrato eq "SANO")){
@@ -244,10 +261,10 @@ sub realizarConsulta{
 	 $igualMonto ? push(@consB,$lineaConsulta) : push(@consD,$lineaConsulta);
       }
       elsif (($estadoMaestro eq "SANO") && ($estadoContrato eq "DUDOSO")){
-	 $igualMonto ? push(@consE1,$lineaConsulta) : push(@consF1,$lineaConsulta);
+	 $igualMonto ? push(@consE2,$lineaConsulta) : push(@consF2,$lineaConsulta);
       }
       elsif (($estadoMaestro eq "DUDOSO") && ($estadoContrato eq "SANO")){
-	 $igualMonto ? push(@consE2,$lineaConsulta) : push(@consF2,$lineaConsulta);	
+	 $igualMonto ? push(@consE1,$lineaConsulta) : push(@consF1,$lineaConsulta);	
       }
 
    }
@@ -257,6 +274,7 @@ sub realizarConsulta{
   }
 
   # Listados.
+  print "LISTADO\n";
   my $consultaA = "Contratos comunes sanos con identico Monto Restante: \n".&procesarConsulta(@filtrosPPI,@consA)."\n";
   print "$consultaA\n";
 
@@ -287,9 +305,19 @@ sub realizarConsulta{
     print LISTADOS $consultaF;
     close(LISTADOS);
   };
-
+ 
   # Modificaciones.
-  &procesarModificacion(\@consC,\@consE1,\@consF1,\%ppiFiltrado);
+  print "MODIFICACIONES\n";
+  my $modicaciones = &procesarModificacion(\@consC,\%ppiFiltrado).
+                     &procesarModificacion(\@consE2,\%ppiFiltrado).
+                     &procesarModificacion(\@consF2,\%ppiFiltrado);
+  print "$modicaciones\n";
+
+  if ($grabarModificaciones){
+    open(MODIFICACIONES,">$archivoModificaciones");
+    print MODIFICACIONES $modicaciones;
+    close(MODIFICACIONES);
+  }
   
   print "Presione Enter para continuar";
   my $enter = <STDIN>;
@@ -329,8 +357,6 @@ sub menu{
 
 # Bloque principal.
 #&validarEntorno();
-
-
 &menu();
 #($pais,$sistema,$anio,$mes) = &cargarParametrosDeConsulta();
 #&realizarConsulta($pais,$sistema,$anio,$mes);
