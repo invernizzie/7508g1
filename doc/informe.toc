@@ -1,0 +1,12 @@
+\select@language {spanish}
+\contentsline {section}{\numberline {1}Hip\'otesis y Aclaraciones}{2}
+\contentsline {section}{\numberline {2}Problemas relevantes}{2}
+\contentsline {section}{\numberline {3}Archivo README: Instructivo de instalaci\'on}{2}
+\contentsline {section}{\numberline {4}Comandos Desarrollados}{3}
+\contentsline {subsection}{\numberline {4.1}Comando Mover}{3}
+\contentsline {subsection}{\numberline {4.2}Comando Iniciar}{6}
+\contentsline {subsection}{\numberline {4.3}Comando Detectar}{11}
+\contentsline {subsection}{\numberline {4.4}Comando X}{16}
+\contentsline {section}{\numberline {5}Archivos}{17}
+\contentsline {subsection}{\numberline {5.1}Archivo de configuraci\'on general}{17}
+\contentsline {subsection}{\numberline {5.2}Archivo X}{17}

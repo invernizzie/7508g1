@@ -1,0 +1,159 @@
+\documentclass[12pt]{article}
+\pagestyle{plain}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[spanish]{babel}
+\usepackage [latin1]{inputenc}
+\usepackage{verbatim}
+
+\begin{document}
+
+\tableofcontents
+\clearpage
+
+\section{Hipótesis y Aclaraciones}
+
+Si al comando Mover se le pasa como destino un directorio, deberá mover a éste el archivo de origen con su mismo nombre.
+
+En los directorios utilizados para archivos de datos (\verb|$DATADIR| y sus subdirectorios), no deben existir archivos ordinarios con el nombre "dup", ya que no permitiría la creación de secuencias de duplicados (para lo cual \verb|dup| deber ser un directorio). En rigor de verdad esta situación podrí­a manejarse, ya sea eliminando los archivos ordinarios de nombre "dup" para crear directorios en su lugar, o descartando los archivos duplicados. Consideramos que no es correcto no almacenar los duplicados, y además no es necesario tener archivos de nombre "dup", debido a que los archivos de entrada tienen nombres con estructuras definidas que no permiten a "dup" ser un archivo de entrada válido.
+
+La correcta inicialización del entorno queda indicada mediante una variable definida a tal propósito (\verb|$ENTORNO_INICIALIZADO|). Basta con chequear desde un comando la existencia de esta variable para asumir un entorno de trabajo válido.
+
+La ruta relativa de \verb|practico.conf| respecto del comando iniciar debe ser: \verb|../conf/practico.conf|. De esta forma se asegura que iniciar pueda encontrarlo y a partir de él recibir cualquier otra información sobre rutas que necesite para continuar su correcta ejecución.
+
+DETALLAR HIPÓTESIS ASUMIDAS SOBRE LA ESTRUCTURA DE DIRECTORIOS PARA PERMITIR A INSTALAR ENCONTRAR \verb|practico.conf|.
+
+\section{Problemas relevantes}
+
+DETALLAR PROBLEMAS ENCONTRADOS DURANTE EL DESARROLLO Y LAS PRUEBAS.
+
+
+
+\section{Archivo README: Instructivo de instalación}
+Cuando esté terminado el README insertar en el \verb|.tex| según su ruta haciendo:
+\begin{verbatim}
+\verbatiminput{ruta/README}
+\end{verbatim}
+
+\section{Comandos Desarrollados}
+\subsection{Comando Mover}
+\begin{description}
+	\item [Tipo de comando:] Solicitado
+	
+	\item [Archivos de entrada:] Archivo especificado por el parámetro 1
+	
+	\item [Archivos de salida:] Archivo o directorio especificado por el parámetro 2; archivo de log del comando que lo invoca: \verb|$LOGDIR/comando.log|
+	
+	\item [Parámetros:]
+	\begin{enumerate}
+		\item Archivo de origen a mover
+		\item Archivo o directorio de destino
+		\item (Opc.) Comando que invoca a mover, permite guardar información en su log
+	\end{enumerate}
+	
+	\item [Ejemplos de invocación:]
+	Sea \verb|a1| la ruta a un archivo existente, \verb|d1| un directorio existente, invocando como:
+	\begin{verbatim}$ mover a1 d1\end{verbatim}
+	el comando mueve el archivo a1 al directorio \verb|d2|, informando que la operación es exitosa. Por mover se entiende que cambia el directorio padre del archivo origen.\\
+	Sea \verb|a1| un archivo existente, \verb|d2| una ruta inválida, invocando como:
+	\begin{verbatim}$ mover a1 d2\end{verbatim}
+	el comando \verb|mv|, invocado por mover, informa que el directorio de destino no existe.\\
+	Sea \verb|a1| y \verb|ruta/a2| archivos existentes, donde \verb|ruta/dup| no existe, invocando como:
+	\begin{verbatim}$ mover a1 ruta/a2\end{verbatim}
+	el comando crea en ruta el subdirectorio \verb|dup|, y mueve allí­ el archivo \verb|a1| con nombre \verb|a2.1|. Este representa el primer duplicado de \verb|a2|. Si se vuelve a invocar como:
+	\begin{verbatim}$ mover ax ruta/a2\end{verbatim}
+	el comando mueve \verb|ax| a \verb|ruta/dup/a2.2|. Así­ va formando una secuencia de archivos duplicados para no permitir la sobreescritura.\\
+	Sea \verb|a1| un archivo existente, \verb|ruta/a1| otro archivo existente, invocando como:
+	\begin{verbatim}$ mover a1 ruta\end{verbatim}
+	el comando intenta mover \verb|a1| a \verb|ruta/a1|; al existir este archivo, se añade un duplicado a la secuencia de \verb|a1| (o se la inicia si no existen duplicados previos).\\
+	Sea \verb|a3| una ruta inválida, \verb|a4| una ruta válida o inválida, invocando como:
+	\begin{verbatim}$ mover a3 a4 com1\end{verbatim}
+	el comando informa que el archivo de origen es inexistente. Además, por haber incluído el tercer parámetro, el comando guarda en \verb|$LOGDIR/com1.log|, a través del comando \verb|glog| todos los mensajes de información y/o error que, al igual que en las demás ejecuciones, también envía por la salida estándar.
+	
+	\item [Código fuente:]
+\end{description}
+{\footnotesize
+\verbatiminput{../bin/mover}
+}
+
+\subsection{Comando Iniciar}
+\begin{description}
+	\item [Tipo de comando:] Solicitado
+	
+	\item [Archivos de entrada:] El archivo de configuración \verb|practico.conf|
+	
+	\item [Archivos de salida:] El archivo de log \verb|$LOGDIR/iniciar.log|
+	
+	\item [Ejemplo de invocación:] El comando iniciar debe invocarse como
+	\begin{verbatim}$ . iniciar\end{verbatim}
+	El comando chequeará la presencia en el archivo de configuración \verb|practico.conf| de las variables indispensables para el correcto funcionamiento de todos los comandos. Solicitará parámetros necesarios para el comando detectar: cantidad máxima de ciclos de ejecución y tiempo de espera entre ciclos, expresado en minutos. También dará la posibilidad de ejecutar detectar a continuación, o bien recibir indicaciones de cómo hacerlo manualmente. La ejecución de este comando deja inicializado el entorno de trabajo para la sesión de bash actual. Cualquier otra sesión de bash en que se quieran utilizar los comandos del trabajo, no representará un entorno válido si no se ejecuta en ella el comando iniciar.
+	
+	\item [Código fuente:]
+\end{description}
+{\footnotesize
+\verbatiminput{../bin/iniciar}
+}
+
+\subsection{Comando Detectar}
+\begin{description}
+	\item [Tipo de comando:] Solicitado
+	
+	\item [Archivos de entrada:] Archivos ubicados en el directorio \verb|$DATADIR|
+	
+	\item [Archivos de salida:] Archivos de \verb|$DATADIR| que cumplen con el criterio de validez de nombres
+	
+	\item [Ejemplos de invocación:]	El comando solo puede invocarse como
+	\begin{verbatim}$ detectar\end{verbatim}
+	de esta manera, lo que hace es verificar la validez de los archivos ubicados en el directorio \verb|$DATADIR|, para así colocar los correctos como archivos de entrada del intérprete en \verb|$DATADIR/ok|, y los incorrectos en \verb|$DATADIR/nok|.
+	
+	\item [Código fuente:]
+\end{description}
+{\footnotesize
+\verbatiminput{../bin/detectar}
+}
+
+\subsection{Comando X}
+\begin{description}
+	\item [Tipo de comando:] [Solicitado | Auxiliar]
+	
+	\item [Justificación:] (de su uso si es auxiliar)
+	
+	\item [Archivos de entrada:]
+	
+	\item [Archivos de salida:]
+	
+	\item [Parámetros:] (si tiene)
+	
+	\item [Opciones:] (si tiene)
+	
+	\item [Ejemplos de invocación:]
+	
+	\item [Código fuente:]
+\end{description}
+% IMPORTANTE: Reemplazar tabulador por 4 espacios en los archivos fuente
+{\footnotesize
+%\verbatiminput{ruta relativa al archivo fuente}
+}
+
+\section{Archivos}
+\subsection{Archivo de configuración general}
+\begin{description}
+	\item [Nombre:] \verb|$GRUPO/practico.conf|
+	\item [Estructura:] Este archivo consta de líneas que pueden ser de alguno de los siguientes tipos:
+	\begin{itemize}
+		\item En blanco
+		\item Comentario, comenzando la línea con \verb|#| sin espacios previos
+		\item Definición de una variable en formato bash: \verb|VARIABLE=VALOR|. El valor puede contener espacios internos, si debe tener espacios al comienzo deben escapearse o encomillarse, aunque se recomienda especialmente no utilizar espacios en las rutas.
+	\end{itemize}
+	Este archivo debe tener como mínimo una serie de variables indispensables que el comando instalar generará. Por tal motivo se recomienda que en caso de modificación no se eliminen variables previamente creadas, solo se las modifique y se agreguen variables nuevas.
+\end{description}
+
+\subsection{Archivo X}
+\begin{description}
+	\item [Nombre:] Su nombre
+	\item [Estructura:] Descripción de la estructura
+	\item [Justificación:] (de su uso si no es requerido por el enunciado)
+\end{description}
+
+
+\end{document}
