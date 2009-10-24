@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Inicializacion de las variables.
-# TODO cambiar por una llamada a INICIAR.
-#PATH=$PATH:.
-
 # Codigos de error
 ENOARGS=65
 ENOFILE=66
@@ -24,7 +20,7 @@ imprimir() {
 det_sec() {
 	SEC=1
 
-	for ARCH in "$DIRDEST"/dup/"$(basename $DEST)".*
+	for ARCH in "$DIRDEST/dup/$(basename $DEST)".*
 	do
 		# Se extrae la secuencia de los duplicados existentes
 		TMP=$(expr "$ARCH" : '.*\(\.[0-9]*\)')
@@ -36,14 +32,13 @@ det_sec() {
 		fi
 	done
 	
-	imprimir "Mover: Duplicado de $(basename $DEST) numero $SEC" I
+	imprimir "Mover: Duplicado de $(basename "$DEST") numero $SEC" I
 }
 
-# TODO Determinar si es necesario contar con el entorno inicializado
-#if [ ! $ENTORNO_INICIALIZADO ]; then
-#	imprimir "Mover: Entorno no inicializado"
-#	exit $ENOENTORNO
-#fi
+if [ ! $ENTORNO_INICIALIZADO ]; then
+	imprimir "Mover: Entorno no inicializado"
+	exit $ENOENTORNO
+fi
 
 # Se chequean parametros obligatorios
 if [ $# -lt 2 -o $# -gt 3 ]; then
@@ -63,21 +58,21 @@ if [ "$1" = "$2" ]; then
 fi
 
 # Se verifica que el origen exista
-if [ ! -e $1 ]; then
+if [ ! -e "$1" ]; then
 	imprimir "Mover: $1 no es un archivo de origen valido" E
 	exit $ENOFILE
 fi
 
-DEST=$2
+DEST="$2"
 
 # Si el destino es un directorio se asume copiar con igual nombre
-if [ -e $2 -a -d $2 ]; then
-	DEST="${2%/}"/$(basename $1)
+if [ -e "$2" -a -d "$2" ]; then
+	DEST="${2%/}/$(basename "$1")"
 fi
 
 # Si no es duplicado se mueve y se termina la ejecucion
-if [ ! -e $DEST ]; then
-	mv $1 $DEST
+if [ ! -e "$DEST" ]; then
+	mv "$1" "$DEST"
 	if [ $# -eq 3 ]; then
 		imprimir "Mover: exitoso de $1 a $DEST" I
 	fi
@@ -85,7 +80,7 @@ if [ ! -e $DEST ]; then
 
 # Si es duplicado se gestiona la secuencia
 else
-	DIRDEST="$(dirname $DEST)"
+	DIRDEST="$(dirname "$DEST")"
 
 	# Si no existe se crea el directorio de duplicados
 	if [ ! -d "$DIRDEST"/dup ]; then
@@ -94,10 +89,8 @@ else
 
 	# Se determina el numero de secuencia siguiente
 	det_sec
-	# Se mueve la version actual a /dup, se la reemplaza por la nueva
-	# TODO ¿Esto es correcto o debe dejarse la actual?
-	mv $DEST "$DIRDEST"/dup/"$(basename $DEST)".$SEC
-	mv $1 $DEST
+	# Se mueve la version que se queria copiar a /dup
+	mv "$1" "$DIRDEST/dup/$(basename "$DEST").$SEC"
 fi
 
 exit 0
