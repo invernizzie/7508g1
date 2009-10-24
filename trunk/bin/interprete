@@ -132,11 +132,11 @@ transformar_fecha(){
 	# Separo segun la convencion dada
 	# Los primeros 6 caracteres son el formato en si
 	FORMATO_DT_FLUX=$( echo $DT_FLUXF| cut --characters=1-6)
-	# El ultimo caracter es la longitud
-	LONGITUD_DT_FLUX=$( echo $DT_FLUXF| cut --characters=7)
+	# Los ultimos caracteres son la longitud
+	LONGITUD_DT_FLUX=$( echo $DT_FLUXF| cut --characters=7-$((${#DT_FLUXF}-1)) )
 	
 	# Valida que no se exceda ni se tenga menor longitud que la pedida, si es asi termina la ejecucion con un error de formato
-	if [ $LONGITUD_DT_FLUX -ne ${#DT_FLUXL} ]; then
+	if [ $LONGITUD_DT_FLUX -ne ${#DT_FLUXL} ]; then	
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
 	fi
