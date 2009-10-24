@@ -6,7 +6,7 @@
 @ESTADOS = ("SANO", "DUDOSO");
 @LINEAS_PPI;
 # El porcentaje de registros del PPI que se utilizan para generar los contratos.
-$PCT_PPI = 0.666;
+$PCT_PPI = 0.8;
 # el porcentaje de registros de contratos que tienen en mismo monto que el de 
 # PPI.
 $PCT_MISMO_MONTO = 0.5;
@@ -18,9 +18,12 @@ sub randInt {
 sub generarContratos {
   
   my $pais = $_[0];
+  my $filename = "CONTRAT.$pais";
+  
+  print "Generando archivo de contratos $filename\n";
   
   open(PPI, "PPI.mae") || die "No se pudo arir PPI.mae";
-  open(CONTRATOS, ">CONTRAT.$pais") || die "No se pudo arir CONTRAT.$pais";
+  open(CONTRATOS, ">$filename") || die "No se pudo arir $filename";
   
   while (my $lineaPpi = <PPI>) {
     
@@ -47,9 +50,10 @@ sub generarContratos {
         $mt_restante = $mt_crd + $mt_impago + $mt_inde - $mt_otrsumdc;
       }
       else { 
-        ($mt_crd, $mt_impago, $mt_inde, $mt_innode, $mt_otrsumdc) = 
-            (0, 0, 0, 0, 0);
-        $mt_restante = &randInt(1000) + 1;
+        ($mt_impago, $mt_inde, $mt_innode, $mt_otrsumdc) = 
+            (0, 0, 0, 0);
+        $mt_restante = &randInt(100000) / 100.0;
+        $mt_crd = $mt_restante;
       }
       my $dt_insert = (&randInt(12) + 1)."/".(&randInt(31) + 1)."/".
                       (&randInt(9) + 2000);
