@@ -4,7 +4,7 @@
 # Variables Globales.
 @PAISES = ("A", "C");
 @ESTADOS = ("SANO", "DUDOSO");
-@LINEAS_PPI;
+$PPI_DIR = "../data/mae/PPI.mae";
 # El porcentaje de registros del PPI que se utilizan para generar los contratos.
 $PCT_PPI = 0.8;
 # el porcentaje de registros de contratos que tienen en mismo monto que el de 
@@ -22,8 +22,8 @@ sub generarContratos {
   
   print "Generando archivo de contratos $filename\n";
   
-  open(PPI, "PPI.mae") || die "No se pudo arir PPI.mae";
-  open(CONTRATOS, ">$filename") || die "No se pudo arir $filename";
+  open(PPI, $PPI_DIR) || die "No se pudo arir $PPI_DIR\n";
+  open(CONTRATOS, ">$filename") || die "No se pudo arir $filename\n";
   
   while (my $lineaPpi = <PPI>) {
     
@@ -37,6 +37,12 @@ sub generarContratos {
       
       my ($sis_id, $anio_id, $mes_id, $no_contrat, $dt_flux) = 
           @regPpi[1, 2, 3, 7, 8];
+      
+      # Formatea correctamente la fecha.
+      # En el PPI aparecen como mmddyyyy.
+      my ($fluxMes, $fluxDia, $fluxAnio) = split("/", $dt_flux);
+      $dt_flux = sprintf("%02d/%02d/%04d", $fluxDia, $fluxMes, $fluxAnio);
+      
       my $estado = $ESTADOS[&randInt($#ESTADOS + 1)];
       my ($mt_crd, $mt_impago, $mt_inde, $mt_innode, $mt_otrsumdc, 
           $mt_restante);
@@ -55,8 +61,8 @@ sub generarContratos {
         $mt_restante = &randInt(100000) / 100.0;
         $mt_crd = $mt_restante;
       }
-      my $dt_insert = (&randInt(12) + 1)."/".(&randInt(31) + 1)."/".
-                      (&randInt(9) + 2000);
+      my $dt_insert = sprintf("%02d/%02d/%04d", &randInt(31) + 1, 
+                              &randInt(12) + 1, &randInt(9) + 2000);
       #TODO
       my $us_id = 0;
       
