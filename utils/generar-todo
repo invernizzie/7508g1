@@ -1,0 +1,9 @@
+#! /bin/bash
+
+# Borra lo viejo.
+rm -v CONTRAT.A CONTRAT.C
+rm -rv ok
+
+# Genera todo.
+./generar-contratos.pl
+./generar-dataok.pl
