@@ -250,10 +250,37 @@ sub procesarConsulta{
   if ($cantidadContratos > 0) {
     return join("-",@filtros,$cantidadContratos,@entrada[0,1],$montoContrato,
                 $montoMaestro);
-  }
-  else {
+ }
+ else {
     return "";
-  }  
+ }
+ 
+}
+
+
+sub imprimirConsulta{
+ # print "entro a imprimir consulta\n";
+  my $consultaSinFormato=$_[0];
+ # print "consulta sin formato :" .  $consultaSinFormato;
+  chomp($consultaSinFormato);
+  my @entrada= split("-",$consultaSinFormato);
+    
+  foreach my $campo (@entrada){
+    printf '%9s %s' , $campo,"|";           
+  }
+  print "\n";
+}
+
+sub imprimirEncabezadoConsulta{
+  printf '%42s %s',"Parametros","|";
+  printf '%9s %s',"Cant Con","|";
+  printf '%9s %s',"Est Cont","|";
+  printf '%9s %s',"Est Mae","|";
+  printf '%9s %s',"Monto Con","|";
+  printf '%9s %s',"Monto Mae","|";
+  printf "\n";
+  
+
 }
 
 sub procesarModificacion{
@@ -343,33 +370,43 @@ sub realizarConsulta{
 
   # Listados.
   print "LISTADO\n";
-  my $consultaA = "Contratos comunes sanos con identico Monto Restante: \n".
-                  &procesarConsulta(@filtrosPPI,@consA)."\n";
-  print "$consultaA\n";
-
-  my $consultaB = "Contratos comunes dudosos con identico Monto Restante: \n".
-                  &procesarConsulta(@filtrosPPI,@consB)."\n";
-  print "$consultaB\n";
   
-  my $consultaC = "Contratos comunes sanos con diferente Monto Restante: \n".
-                  &procesarConsulta(@filtrosPPI,@consC)."\n";
-  print "$consultaC\n";
-
-  my $consultaD = "Contratos comunes dudosos con diferente Monto Restante: \n".
-                  &procesarConsulta(@filtrosPPI,@consD)."\n";
-  print "$consultaD\n";
-
-  my $consultaE = 
-    "Contratos comunes con diferente estado con identico Monto Restante: \n".
-		&procesarConsulta(@filtrosPPI,@consE1)."\n".
-		&procesarConsulta(@filtrosPPI,@consE2)."\n";
-  print "$consultaE\n";
   
-  my $consultaF = 
-    "Contratos comunes con diferente estado con diferente Monto Restante: \n".
-		&procesarConsulta(@filtrosPPI,@consF1)."\n".
-		&procesarConsulta(@filtrosPPI,@consF2)."\n";
-  print "$consultaF\n";
+  $consultaSinFormato=&procesarConsulta(@filtrosPPI,@consA)."\n";
+  print "Contratos comunes sanos con identico Monto Restante: \n";
+  &imprimirEncabezadoConsulta();
+  &imprimirConsulta($consultaSinFormato);
+     
+
+  $consultaSinFormato= &procesarConsulta(@filtrosPPI,@consB)."\n";
+  print "Contratos comunes dudosos con identico Monto Restante: \n";
+  &imprimirEncabezadoConsulta();
+  &imprimirConsulta($consultaSinFormato);
+
+  
+  print "Contratos comunes sanos con diferente Monto Restante: \n";
+  $consultaSinFormato=&procesarConsulta(@filtrosPPI,@consC)."\n";
+  &imprimirEncabezadoConsulta();
+  &imprimirConsulta($consultaSinFormato); 
+
+  print "Contratos comunes dudosos con diferente Monto Restante: \n";
+  $consultaSinFormato=&procesarConsulta(@filtrosPPI,@consD)."\n";
+  &imprimirEncabezadoConsulta();
+  &imprimirConsulta($consultaSinFormato);
+
+  print "Contratos comunes con diferente estado con identico Monto Restante: \n";
+	$consultaSinFormato= &procesarConsulta(@filtrosPPI,@consE1)."\n";
+  &imprimirEncabezadoConsulta();
+  &imprimirConsulta($consultaSinFormato);
+	$consultaSinFormato= &procesarConsulta(@filtrosPPI,@consE2)."\n";
+  &imprimirConsulta($consultaSinFormato);
+  
+  print "Contratos comunes con diferente estado con diferente Monto Restante: \n";
+	$consultaSinFormato=&procesarConsulta(@filtrosPPI,@consF1)."\n";
+  &imprimirEncabezadoConsulta();
+	imprimirConsulta($consultaSinFormato);
+	$consultaSinFormato=&procesarConsulta(@filtrosPPI,@consF2)."\n";
+  imprimirConsulta($consultaSinFormato);
   
   if ($grabarListados){ 
     open(LISTADOS,">$archivoListados");
