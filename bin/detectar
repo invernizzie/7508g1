@@ -190,7 +190,7 @@ do
         # Solo puede correr una instancia del interprete
         contar_instancias "interprete"
         if [ $CANTINST -lt 1 ]; then
-            #interprete
+            interprete
             if [ $? -eq 0 ]; then
                 imprimir "PID de interprete: $!"
             else
