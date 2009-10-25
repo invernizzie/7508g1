@@ -9,7 +9,7 @@ ENOINSTALADO=15
 imprimir() {
     echo $1
     if [ $ENTORNO_INICIALIZADO ]; then
-        glog "$INICIAR" $2 "$1"
+        glog iniciar $2 "$1"
     fi
 }
 
@@ -181,5 +181,19 @@ if [ $(ps -e | grep detectar | wc -l) -eq 0 ]; then
         echo "debe ingresar \"detectar &\" en una consola con el entorno iniciado."
     fi
 fi
+
+# Botonea acerca de los T0D0s sin hacer.
+for arch in $(ls "$BINDIR")
+do
+    PARA=TO
+    HACER=DO
+    POR_HACER=$(grep $PARA$HACER -n <"$BINDIR/$arch");
+    if [ "$POR_HACER" ]
+    then
+        echo "El archivo $arch tiene cosas por hacer!"
+        echo "$POR_HACER"
+    fi
+done
+
 
 imprimir "Entorno inicializado correctamente, iniciar terminado"

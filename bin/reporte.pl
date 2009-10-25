@@ -19,19 +19,31 @@ $archivoModificaciones = "Modificaciones.txt";
 # caso de ser así.
 sub validarEntorno {
   
-  if (!$ENV{ENTORNO_INICIALIZADO}) {
+  if (!$ENV{"ENTORNO_INICIALIZADO"}) {
     print "Entorno no inicializado\n";
     exit 1;
   }
+}
+
+sub glog {
+  my ($mensaje, $tipo) = @_;
+  print "Reporte: $mensaje\n";
+  `glog reporte $mensaje $tipo`
+}
+
+sub glogAndExit {
+  my ($mensaje, $tipo, $exitCode) = @_;
+  glog ($mensaje, $tipo);
+  exit $exitCode;
 }
 
 # Inicializa las varibles gobales %paisesValidos y %sistemasValidos a partir del
 # archivo p-s.tab.
 sub inicializarPaisesSistemasValidos {
   
-  # TODO obtener el nombre de archivo a partir de la varible de entorno DATADIR.
-  my $filename = "../conf/p-s.tab";
-  open (PSTAB, $filename) || die "No se pudo abrir el archivo $filename";
+  my $psTabDir = $ENV{"GRUPO"}."/conf/p-s.tab";
+  open (PSTAB, $psTabDir) || 
+    glogAndExit ("No se pudo abrir el archivo $psTabDir", "SE", 1);
   
   my (%paises, %sistemas);
   while (my $linea = <PSTAB>) {
@@ -68,14 +80,12 @@ sub validacionNula{
   return @_[0];
 }
 
-# TODO
 sub validarPais {
   
   my $pais = @_[0];
   return exists ($paisesValidos{$pais}) ? $pais : "";
 } 
 
-# TODO
 sub validarSistema{
   
   my $sistema = @_[0];
@@ -202,8 +212,8 @@ sub filtrarArchivo {
   # Hash con registros filtrados del archivo correspondiente.
   my %filtrado;
 
-  # TODO Usar glog?
-  open(ARCHIVO,$fileName) || die ("No se pudo abrir $filename\n");
+  open(ARCHIVO, $fileName) || 
+    glogAndExit ("No se pudo abrir $fileName", "SE", 1);
 
   my $linea;
   while ($linea = <ARCHIVO>){
@@ -249,7 +259,6 @@ sub procesarConsulta{
 sub procesarModificacion{
 
   my ($rCons,$rPpiFiltrado) = @_;
-  my $key;
   my $modificacion;
 
   my ($seg, $min, $hora, $dia, $mes, $anho, @zape) = localtime(time);
@@ -266,7 +275,8 @@ sub procesarModificacion{
     
     @entradaMaestro = split("-",$ppiFiltrado{$nContrato});
     
-    $modificacion = $modificacion.join("-", @entradaMaestro[1,2,3,8,6,10,11,12,13,14], @entradaConsulta[3],$fecha,$usId)."\n";
+    $modificacion = $modificacion.join("-", @entradaMaestro[1,2,3,8,6,10..14], 
+                                       @entradaConsulta[3],$fecha,$usId)."\n";
   }
   
   return $modificacion;
@@ -277,74 +287,88 @@ sub realizarConsulta{
   my @filtrosPPI = @_;
   my @filtrosContrato = @_[1..$#_];
   my $pais = $_[0];
-  my $key;
 
-  # TODO Obtener las rutas de los archivos a partir de la variable de entorno
-  # DATADIR.
-  my %ppiFiltrado = &filtrarArchivo("PPI.mae","filtroArchivoMaestro",@filtrosPPI);
-  my %contratosFiltrado = &filtrarArchivo("CONTRAT.$pais","filtroArchivoContratos",@filtrosContrato);
+  my $ppiDir       = $ENV{"DATADIR"}."/mae/PPI.mae";
+  my $contratosDir = $ENV{"DATADIR"}."/new/CONTRAT.$pais";
+  
+  my %ppiFiltrado = 
+    &filtrarArchivo($ppiDir,       "filtroArchivoMaestro",   @filtrosPPI);
+  my %contratosFiltrado = 
+    &filtrarArchivo($contratosDir, "filtroArchivoContratos", @filtrosContrato);
+  
   my (@consA, @consB, @consC, @consD, @consE1, @consE2, @consF1, @consF2); 
 
-  foreach $key (keys(%contratosFiltrado)) {
-
-    my $lineaContrato = $contratosFiltrado{$key}; 
-    my $lineaMaestro = $ppiFiltrado{$key};  
+  foreach my $nContrato (keys(%contratosFiltrado)) {
     
-    if ($lineaMaestro){
+    if (exists $ppiFiltrado{$nContrato}){
+    
+      my $lineaContrato = $contratosFiltrado{$nContrato}; 
+      my $lineaMaestro = $ppiFiltrado{$nContrato};  
 
       my @arrayMaestro = split("-",$lineaMaestro);    
       my @arrayContrato = split("-",$lineaContrato);
   
       # Calcula el monto restante.
-      my ($MT_CRD, $MT_IMPAGO, $MT_INDE, $MT_OTRSUMDC) = @arrayMaestro[10,11,13,14];
+      my ($MT_CRD, $MT_IMPAGO, $MT_INDE, $MT_OTRSUMDC) = 
+          @arrayMaestro[10,11,13,14];
       my $montoMaestro = $MT_CRD + $MT_IMPAGO + $MT_INDE - $MT_OTRSUMDC;
       my $estadoMaestro = @arrayMaestro[6];
     
       my ($estadoContrato, $montoContrato) = @arrayContrato[5,11];
       
       $lineaConsulta = join("-", $estadoContrato, $estadoMaestro, 
-                            $montoContrato, $montoMaestro, $key);
+                            $montoContrato, $montoMaestro, $nContrato);
       $igualMonto = ($montoMaestro == $montoContrato);
   
-      if (($estadoMaestro eq "SANO") && ($estadoContrato eq "SANO")){
-        $igualMonto ? push(@consA,$lineaConsulta) : push(@consC,$lineaConsulta);
+      my $estados = "$estadoMaestro $estadoContrato";
+      switch ($estados) {
+        case "SANO SANO"     { $igualMonto ? push(@consA,$lineaConsulta) 
+                                           : push(@consC,$lineaConsulta); }
+        case "DUDOSO DUDOSO" { $igualMonto ? push(@consB,$lineaConsulta) 
+	                                         : push(@consD,$lineaConsulta); }
+        case "SANO DUDOSO"   { $igualMonto ? push(@consE2,$lineaConsulta) 
+	                                         : push(@consF2,$lineaConsulta); }
+        case "DUDOSO SANO"   { $igualMonto ? push(@consE1,$lineaConsulta) 
+	                                         : push(@consF1,$lineaConsulta); }
+	      # TODO Es correcto?
+	      else { &glog("Estado inválido: $estados", "E"); }
       }
-      elsif (($estadoMaestro eq "DUDOSO") && ($estadoContrato eq "DUDOSO")){
-	      $igualMonto ? push(@consB,$lineaConsulta) : push(@consD,$lineaConsulta);
-      }
-      elsif (($estadoMaestro eq "SANO") && ($estadoContrato eq "DUDOSO")){
-	      $igualMonto ? push(@consE2,$lineaConsulta) : push(@consF2,$lineaConsulta);
-      }
-      elsif (($estadoMaestro eq "DUDOSO") && ($estadoContrato eq "SANO")){
-	      $igualMonto ? push(@consE1,$lineaConsulta) : push(@consF1,$lineaConsulta);	
-      }
-
-   }
-   else{
-	# TODO llamas al glog. ("No existe el numero de contrato en el archivo maestro" SE)
-   }
+    }
+    else{
+      # TODO glog o glogAndExit?
+      &glog ("No existe el numero de contrato $nContrato en el archivo maestro",
+             "E");
+    }
   }
 
   # Listados.
   print "LISTADO\n";
-  my $consultaA = "Contratos comunes sanos con identico Monto Restante: \n".&procesarConsulta(@filtrosPPI,@consA)."\n";
+  my $consultaA = "Contratos comunes sanos con identico Monto Restante: \n".
+                  &procesarConsulta(@filtrosPPI,@consA)."\n";
   print "$consultaA\n";
 
-  my $consultaB = "Contratos comunes dudosos con identico Monto Restante: \n".&procesarConsulta(@filtrosPPI,@consB)."\n";
+  my $consultaB = "Contratos comunes dudosos con identico Monto Restante: \n".
+                  &procesarConsulta(@filtrosPPI,@consB)."\n";
   print "$consultaB\n";
   
-  my $consultaC = "Contratos comunes sanos con diferente Monto Restante: \n".&procesarConsulta(@filtrosPPI,@consC)."\n";
+  my $consultaC = "Contratos comunes sanos con diferente Monto Restante: \n".
+                  &procesarConsulta(@filtrosPPI,@consC)."\n";
   print "$consultaC\n";
 
-  my $consultaD = "Contratos comunes dudosos con diferente Monto Restante: \n".&procesarConsulta(@filtrosPPI,@consD)."\n";
+  my $consultaD = "Contratos comunes dudosos con diferente Monto Restante: \n".
+                  &procesarConsulta(@filtrosPPI,@consD)."\n";
   print "$consultaD\n";
 
-  my $consultaE = "Contratos comunes con diferente estado con identico Monto Restante: \n".
-		  &procesarConsulta(@filtrosPPI,@consE1)."\n".&procesarConsulta(@filtrosPPI,@consE2)."\n";
+  my $consultaE = 
+    "Contratos comunes con diferente estado con identico Monto Restante: \n".
+		&procesarConsulta(@filtrosPPI,@consE1)."\n".
+		&procesarConsulta(@filtrosPPI,@consE2)."\n";
   print "$consultaE\n";
   
-  my $consultaF = "Contratos comunes con diferente estado con diferente Monto Restante: \n".
-		  &procesarConsulta(@filtrosPPI,@consF1)."\n".&procesarConsulta(@filtrosPPI,@consF2)."\n";
+  my $consultaF = 
+    "Contratos comunes con diferente estado con diferente Monto Restante: \n".
+		&procesarConsulta(@filtrosPPI,@consF1)."\n".
+		&procesarConsulta(@filtrosPPI,@consF2)."\n";
   print "$consultaF\n";
   
   if ($grabarListados){ 
@@ -408,7 +432,7 @@ sub menu{
 }
 
 # Bloque principal.
-#&validarEntorno();
+&validarEntorno();
 &inicializarPaisesSistemasValidos();
 &menu();
 

@@ -1,3 +1,36 @@
 2009/10/20 17:42:44-I-Ciclo #9
 2009/10/20 17:42:45-I-Ciclo #10
 2009/10/20 17:42:45-I-Cantidad maxima de ciclos alcanzada
+2009/10/25 03:36:52-I-Detectar iniciado
+2009/10/25 03:36:52-I-Ciclo #1
+2009/10/25 03:37:24-W-Detectar ya esta corriendo
+2009/10/25 04:17:25-I-Detectar iniciado
+2009/10/25 04:17:26-I-Ciclo #1
+2009/10/25 04:17:26-I-Mover: exitoso de /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/A-7-2009-9 a /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/ok/A-7-2009-9
+2009/10/25 04:17:26-I-Recibido: A-7-2009-9
+2009/10/25 04:17:26-I-Mover: exitoso de /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/C-6-2008-11 a /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/ok/C-6-2008-11
+2009/10/25 04:17:26-I-Recibido: C-6-2008-11
+2009/10/25 04:17:26-I-Mover: exitoso de /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/C-6-2008-12 a /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/ok/C-6-2008-12
+2009/10/25 04:17:26-I-Recibido: C-6-2008-12
+2009/10/25 04:17:26-I-Mover: exitoso de /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/C-6-2008-2 a /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/ok/C-6-2008-2
+2009/10/25 04:17:26-I-Recibido: C-6-2008-2
+2009/10/25 04:17:26-I-Mover: exitoso de /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/C-6-2008-3 a /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/ok/C-6-2008-3
+2009/10/25 04:17:26-I-Recibido: C-6-2008-3
+2009/10/25 04:17:26-I-Mover: exitoso de /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/C-6-2008-4 a /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/ok/C-6-2008-4
+2009/10/25 04:17:26-I-Recibido: C-6-2008-4
+2009/10/25 04:17:27-I-Mover: exitoso de /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/C-6-2009-2 a /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/ok/C-6-2009-2
+2009/10/25 04:17:27-I-Recibido: C-6-2009-2
+2009/10/25 04:17:27-I-Mover: exitoso de /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/C-6-2009-3 a /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/ok/C-6-2009-3
+2009/10/25 04:17:27-I-Recibido: C-6-2009-3
+2009/10/25 04:17:27-I-Mover: exitoso de /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/C-7-2008-10 a /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/ok/C-7-2008-10
+2009/10/25 04:17:27-I-Recibido: C-7-2008-10
+2009/10/25 04:17:27-I-Mover: exitoso de /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/C-7-2008-11 a /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/ok/C-7-2008-11
+2009/10/25 04:17:27-I-Recibido: C-7-2008-11
+2009/10/25 04:17:27-I-Mover: exitoso de /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/C-7-2008-12 a /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/ok/C-7-2008-12
+2009/10/25 04:17:27-I-Recibido: C-7-2008-12
+2009/10/25 04:17:27-I-Mover: exitoso de /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/C-7-2008-2 a /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/ok/C-7-2008-2
+2009/10/25 04:17:27-I-Recibido: C-7-2008-2
+2009/10/25 04:17:27-I-Mover: exitoso de /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/C-7-2009-9 a /home/demian/Documents/Facultad/75.08 Sistemas Operativos/tp_workspace/data/ok/C-7-2009-9
+2009/10/25 04:17:27-I-Recibido: C-7-2009-9
+2009/10/25 04:17:27-I-PID de interprete: 
+2009/10/25 04:17:28-I-Cantidad maxima de ciclos alcanzada
