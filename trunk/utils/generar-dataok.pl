@@ -21,6 +21,10 @@ $SEPARADOR = "-LOL-";
 # Valor = <nombre de campo>SEPARADOR<formato>SEPARADOR<flag utilización>
 %T2;
 
+# Campos necesarios en T2 (sin los cuales no se podría armar, inversamente a 
+# este script, los archivos CONTRAT).
+# Clave = Nombre de campo
+# Valor = Índice del campo en los registros del archivo CONTRAT
 %CAMPOS_T2_NECESARIOS = ("NO_CONTRAT",  3,
                          "DT_FLUX",     4,
                          "CD_STATCTB",  5,
