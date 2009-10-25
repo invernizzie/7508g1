@@ -134,6 +134,40 @@ Cuando esté terminado el README insertar en el \verb|.tex| según su ruta haciend
 {\footnotesize
 %\verbatiminput{ruta relativa al archivo fuente}
 }
+% á é í ó ú
+\subsection{Comando Reporte}
+\begin{description}
+	\item [Tipo de comando:] Solicitado
+	
+	\item [Archivos de entrada:]
+		\begin{enumerate}
+		\item Archivo de Contratos de Préstamos Personales ubicado en \verb|$grupo/datadir/new/CONTRAT.<pais>|
+		\item Archivo Maestro Préstamos Personales Impagos ubicado en \verb|$grupo/datadir/mae/PPI.mae|
+		\item Tabla de Paises y Sistemas ubicadas en \verb|$grupo/conf/p-s.tab|
+		\end{enumerate}
+
+	\item [Archivos de salida:] Los archivos de salida correspondientes a este comando, se generan si el usuario lo especifica. 
+		\begin{enumerate}
+		\item Log  \verb|$grupo/logdir/reporte.log|
+		\item Listados \verb|$grupo/datadir/list/<nombre listado>.<id>|
+		\item Archivo de Modificaciones de Contratos \verb|$grupo/datadir/new/MODIF.<pais>|
+		\end{enumerate}
+
+	\item [Ejemplos de invocación:]	El comando solo puede invocarse como
+	\begin{verbatim}$ reporte\end{verbatim}
+	de esta manera, se carga un menu interactivo en donde el usuario puede:
+		\begin{enumerate}
+		\item Cargar parámetros de la consulta a realizar
+		\item Activar o desactivar la grabación de los listados de consulta
+		\item Activar o desactivar la grabación de modificaciones de contrato
+		\item Realizar la consulta en base a los parámetros ingresados por teclado
+		\end{enumerate}
+
+	\item [Código fuente:]
+\end{description}
+{\footnotesize
+\verbatiminput{../bin/reporte.pl}
+}
 
 \section{Archivos}
 \subsection{Archivo de configuración general}
