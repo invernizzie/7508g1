@@ -42,8 +42,9 @@ cd inst
 # Defino la variable en la que almaceno la ubicacion del archivo de logs
 # para la instalacion
 LOGINSTALL="$grupo/log/instalar.log"
-if [ ! -d "$grupo/log"]; then
-mkdir "$grupo/log"
+if [ ! -d "$grupo/log" ]; then
+	mkdir "$grupo/log"
+fi
 
 ### Paso 1 ###
 # Registro el inicio de la instalacion
@@ -59,7 +60,7 @@ echo "Directorio de instalacion: $grupo/inst" | tee -a $LOGINSTALL
 
 ### Paso 4 ###
 # Muestro y grabo la ubicacion del directorio de los parametros de configuracion
-echo "Directorio de instalacion: $grupo/conf" | tee -a $LOGINSTALL
+echo "Directorio de configuracion: $grupo/conf" | tee -a $LOGINSTALL
 
 ### Paso 5 ###
 # Al encontrar el archivo, busco los componentes que se encuentran instalados.
@@ -79,13 +80,16 @@ CONFFILE="$grupo/conf/practico.conf"
 # Se detecta si alguno de los componentes o ninguno ha sido instalado
 if [ -e $CONFFILE ]; then
 
+  # Renombro el archivo de configuracion existente, para que no se elimine en la creacion
+  # del nuevo.
+  mv "$CONNFILE" "$CONNFILE.old"
+
 	# Construyo la lista de los componentes que tengo instalados, y otras dos
 	# con los datos que tengo que mostrar.
-	grep -e COMAND -e USERID -e FECINS $CONNFILE > "$CONNFILE.temp"
+	grep -e COMAND -e USERID -e FECINS "$CONNFILE.old" > "$CONNFILE.temp"
 	listaComponentesInstalados=( $(grep "COMAND =" "$CONNFILE.temp" | sed 's/COMAND =//g') )
 	listaUsuariosInstalados=( $(grep "USERID =" "$CONNFILE.temp" | sed 's/USERID =//g') )
 	listaFechasInstalados=( $(grep "FECINS =" "$CONNFILE.temp" | sed 's/FECINS =//g') )
-
 
 
 	# Determino y muestro la lista de componentes instalados. Recorro la
@@ -98,6 +102,9 @@ if [ -e $CONFFILE ]; then
 			echo "Comando $componente instalado el ${listaFechasInstalados[$comparacion]} por ${listaUsuariosInstalados[$comparacion]}"
 		fi
 	done
+
+  rm "$CONNFILE.old"
+  rm "$CONNFILE.temp"
 
 fi
 
@@ -244,32 +251,52 @@ done
 ### Paso 15 ###
 # Creo la estructura de los directorios
 echo "Creando Estructura de Directorio..."
-if [ ! -d $BINDIR]; then
+if [ ! -d $BINDIR ]; then
 	mkdir $BINDIR
 fi
-if [ ! -d $DATADIR]; then
+if [ ! -d $DATADIR ]; then
 	mkdir $DATADIR
 fi
 # En caso de que no se haya cambiado el directorio de los logs
-if [ ! -d $LOGDIR]; then
+if [ ! -d $LOGDIR ]; then
 	mkdir $LOGDIR
+fi
+if [ ! -d "$grupo/conf" ]; then
+	mkdir "$grupo/conf"
 fi
 
 
 ### Paso 16 y 17 ###
 # Creo el archivo de configuracion y guardo los elementos de las primeras 7 lineas
-echo "INSTDIR=/inst" >
-echo "FILECONF=/conf/practico.conf"
-echo "LOGFILE=/log/instalar.log"
-echo "DATADIR=$DATADIR"
-echo "PERLVER=$PERLVER"
-echo "MAXLOG=$MAXLOG"
-echo "USIZE=$USIZE"
+echo "INSTDIR=/inst" > $CONFFILE
+echo "FILECONF=/conf/practico.conf" >> $CONFFILE
+echo "LOGFILE=/log/instalar.log" >> $CONFFILE
+echo "DATADIR=$DATADIR" >> $CONFFILE
+echo "PERLVER=$PERLVER" >> $CONFFILE
+echo "MAXLOG=$MAXLOG" >> $CONFFILE
+echo "USIZE=$USIZE" >> $CONFFILE
 
 # Dejo las lineas 8 y 9 reservadas
+echo -e "\n" >> $CONFFILE
 
-# Copio los componentes que estan instalados y los agrego al archivo de configuracion
+USERNAME=$( echo `id -un` )
+DATE=$(date '+%Y/%m/%d %H:%M:%S')
+# Copio los componentes que no estan instalados y los agrego al archivo de configuracion
+for componente in ${listaComponentesInstalarFinal[@]}; do
+  echo "Instalando $componente"
+	cp "$grupo/inst/bin/$componente" "$BINDIR/$componente"
+  echo "COMAND = $componente" >> $CONFFILE
+  echo "BINDIR = $BINDIR" >> $CONFFILE
+  echo "USERID = $USERNAME" >> $CONFFILE
+  echo "FECINS = $DATE" >> $CONFFILE
+  echo -e "LOGDIR = $LOGDIR\n" >> $CONFFILE
+done
+
+# Copio los archivos de datos. Copio todos indiscriminadamente a la nueva carpeta.
+# Si existen duplicados, se reemplazan por la version que se esta instalando.
+cp -r "$grupo/inst/data/" "$DATADIR/"
 
 ### Paso 18 ###
 ### Paso 19 ###
 ### Paso 20 ###
+echo "Fin de Ejecucion" | tee -a $LOGINSTALL
