@@ -4,25 +4,30 @@ ENOENTORNO=14
 ENODATADIR=15
 ENODIR=16
 ENOFORMATO=17
-GRUPO=..
+
+ERRDESC=( \
+[$ENOENTORNO]="Entorno no inicializado" \
+[$ENODATADIR]="Directorio de entrada inexistente" \
+[$ENODIR]="Directorio inexistente" \
+[$ENOFORMATO]="Error de formato" )
 
 #HIPOTESIS
 # Cuando valida que no haya archivos repetidos valida que los nombres no sean iguales y los contenidos tampoco.
 # Cuando pasa el formato numerico para la parte entera corta los primeros 10 caracteres de izquierda a derecha y para la decimal corta los primeros 2 caracteres de izquierda a derecha
-DATADIR=../data # TODO Provisorio para pruebas: ¿DATADIR debe ser parte del entorno?
+#DATADIR=../data
 T1="$GRUPO/conf/T1.tab"	# Tabla de Separadores
-T2="$GRUPO/conf/T2.tab" #Tabla de Campos
-DIROK="$DATADIR/ok"
-DIRNOK="$DATADIR/nok"
-CONTRATOS="$DATADIR/new/CONTRAT"
-DIROLD="$DATADIR/old"
-INTERPRETE=$(basename $0)
+T2="$GRUPO/conf/T2.tab"	# Tabla de Campos
+DIROK="$DATADIR/ok"	# Directorio de Aceptados
+DIRNOK="$DATADIR/nok"	# Directorio de Rechazados
+DIRNEW="$DATADIR/new"	# Directorio de Contratos
+DIROLD="$DATADIR/old"	# Directorio de Procesados
+CONTRATOS="$DATADIR/new/CONTRAT" # Nombre de los Contratos
 
 # Funcion para imprimir por consola y al log
 # Uso: imprimir mensaje [tipo]
 imprimir() {
 	echo $1
-	glog interprete $2 "$1"
+	glog "interprete" $2 "$1"
 }
 
 # Funcion para contar las instancias de un proceso dado su nombre
@@ -30,13 +35,14 @@ imprimir() {
 # Almacena la cantidad contada en CANTINST
 contar_instancias() {
 	if [ -z $1 ]; then
-		return
+	return
 	fi
-	
+    
 	# De los procesos existentes, se cuentan las instancias del buscado
-	CANTINST=$(ps -e | grep "$1" | wc -l)
+	CANTINSTA=$(ps -e | grep "$1" | wc -l)
+
 	# Debe restarse uno porque el subshell abierto incrementa la cantidad de instancias
-	if [ "$1" = $INTERPRETE ]; then (( CANTINST -= 1 )); fi
+	if [ "$1" = interprete ]; then (( CANTINSTA -= 1 )); fi
 }
 
 # Funcion para validar que no haya archivos que se procesen dos veces, para eso mira dentro de DIROLD archivo por archivo y compara contenidos
@@ -137,7 +143,7 @@ transformar_fecha(){
 	
 	# Valida que no se exceda ni se tenga menor longitud que la pedida, si es asi termina la ejecucion con un error de formato
 	if [ $LONGITUD_DT_FLUX -ne ${#DT_FLUXL} ]; then	
-		echo "Interprete: Error de formato."
+		echo "Interprete: Error de formato."		
 		exit $ENOFORMATO
 	fi
 	
@@ -174,20 +180,20 @@ transformar_alfanumericos(){
 	
 	# Valida que no se superen las longitudes maximas, si es asi termina la ejecucion con un error de formato
 	if [ ${#CD_STATCTBL} -gt $LONGITUD_CD_STATCTB ]; then
-		echo "Interprete: Error de formato."
+		echo "Interprete: Error de formato."		
 		exit $ENOFORMATO
 	fi
 	if [ ${#NO_CONTRATL} -gt $LONGITUD_NO_CONTRAT ]; then
-		echo "Interprete: Error de formato."
+		echo "Interprete: Error de formato."	
 		exit $ENOFORMATO
 	fi
 	
 	# Transforma el estado contable al formato correspondiente
 	if [ "$CD_STATCTBL" = "SNA" ] || [ "$CD_STATCTBL" = "SNIM" ]; then		
-		CD_STATCTB="SANOS"
+		CD_STATCTB="SANO"
 	fi
 	if [ "$CD_STATCTBL" = "DTCA" ] || [ "$CD_STATCTBL" = "DTXA" ]; then		
-		CD_STATCTB="DUDOSOS"
+		CD_STATCTB="DUDOSO"
 	fi
 	if [ "$CD_STATCTBL" = "CTX" ]; then		
 		CD_STATCTB="CTX"
@@ -240,8 +246,9 @@ transformar_numericos(){
 	LONGMAXD_MT_INNODE=$( echo $MT_INNODEF| cut -d '.' -f 2 )
 
 	# Obtiene la parte entera y decimal del monto de credito y valida que no se superen las longitudes maximas, si es asi se sale con un error de formato
-	E_MT_CRD=$( echo $MT_CRDL| cut -d $SEPDECIMAL -f 1 )
-	D_MT_CRD=$( echo $MT_CRDL| cut -d $SEPDECIMAL -f 2 )
+	E_MT_CRD=$( echo $MT_CRDL| cut -d $SEPDECIMAL -f 1 -s )
+	D_MT_CRD=$( echo $MT_CRDL| cut -d $SEPDECIMAL -f 2 -s )
+
 	if [ ${#E_MT_CRD} -gt $LONGMAXE_MT_CRD ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
@@ -250,10 +257,10 @@ transformar_numericos(){
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
 	fi
-
+	
 	# Obtiene la parte entera y decimal del monto impago y valida que no se superen las longitudes maximas, si es asi se sale con un error de formato
-	E_MT_IMPAGO=$( echo $MT_IMPAGOL| cut -d $SEPDECIMAL -f 1 )
-	D_MT_IMPAGO=$( echo $MT_IMPAGOL| cut -d $SEPDECIMAL -f 2 )
+	E_MT_IMPAGO=$( echo $MT_IMPAGOL| cut -d $SEPDECIMAL -f 1 -s )
+	D_MT_IMPAGO=$( echo $MT_IMPAGOL| cut -d $SEPDECIMAL -f 2 -s )
 	if [ ${#E_MT_IMPAGO} -gt  $LONGMAXE_MT_IMPAGO ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
@@ -264,8 +271,8 @@ transformar_numericos(){
 	fi
 
 	# Obtiene la parte entera y decimal del monto de otras sumas y valida que no se superen las longitudes maximas, si es asi se sale con un error de formato
-	E_MT_OTRSUMDC=$( echo $MT_OTRSUMDCL| cut -d $SEPDECIMAL -f 1 )
-	D_MT_OTRSUMDC=$( echo $MT_OTRSUMDCL| cut -d $SEPDECIMAL -f 2 )
+	E_MT_OTRSUMDC=$( echo $MT_OTRSUMDCL| cut -d $SEPDECIMAL -f 1 -s )
+	D_MT_OTRSUMDC=$( echo $MT_OTRSUMDCL| cut -d $SEPDECIMAL -f 2 -s )
 	if [ ${#E_MT_OTRSUMDC} -gt $LONGMAXE_MT_OTRSUMDC ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
@@ -276,8 +283,8 @@ transformar_numericos(){
 	fi
 
 	# Obtiene la parte entera y decimal del monto devengado y valida que no se superen las longitudes maximas, si es asi se sale con un error de formato
-	E_MT_INDE=$( echo $MT_INDEL| cut -d $SEPDECIMAL -f 1 )
-	D_MT_INDE=$( echo $MT_INDEL| cut -d $SEPDECIMAL -f 2 )
+	E_MT_INDE=$( echo $MT_INDEL| cut -d $SEPDECIMAL -f 1 -s )
+	D_MT_INDE=$( echo $MT_INDEL| cut -d $SEPDECIMAL -f 2 -s )
 	if [ ${#E_MT_INDE} -gt $LONGMAXE_MT_INDE ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
@@ -288,8 +295,8 @@ transformar_numericos(){
 	fi
 
 	# Obtiene la parte entera y decimal del monto no devengado y valida que no se superen las longitudes maximas, si es asi se sale con un error de formato
-	E_MT_INNODE=$( echo $MT_INNODEL| cut -d $SEPDECIMAL -f 1 )
-	D_MT_INNODE=$( echo $MT_INNODEL| cut -d $SEPDECIMAL -f 2 )
+	E_MT_INNODE=$( echo $MT_INNODEL| cut -d $SEPDECIMAL -f 1 -s )
+	D_MT_INNODE=$( echo $MT_INNODEL| cut -d $SEPDECIMAL -f 2 -s )
 	if [ ${#E_MT_INNODE} -gt $LONGMAXE_MT_INNODE ]; then
 		echo "Interprete: Error de formato."
 		exit $ENOFORMATO
@@ -345,8 +352,8 @@ transformar_numericos(){
 	# Obtiene el monto restante
 	MT_RESTANTE=$(echo "$MT_CRD + $MT_IMPAGO + $MT_INDE -$MT_OTRSUMDC" | bc -l)
 	# Lo separa en parte decimal y entera
-	E_MT_RESTANTE=$( echo $MT_RESTANTE| cut -d '.' -f 1 )
-	D_MT_RESTANTE=$( echo $MT_RESTANTE| cut -d '.' -f 2 )
+	E_MT_RESTANTE=$( echo $MT_RESTANTE| cut -d '.' -f 1 -s )
+	D_MT_RESTANTE=$( echo $MT_RESTANTE| cut -d '.' -f 2 -s )
 	# Si el entero o el decimal estan vacios se los pone en cero
 	if [ "$E_MT_RESTANTE" = "" ]; then		
 		E_MT_RESTANTE=0
@@ -401,10 +408,10 @@ procesar(){
 }
 
 # Solo se permite una instancia activa de este script.
-contar_instancias $INTERPRETE
-if [ $CANTINST -gt 1 ]; then 
-	imprimir "Interprete ya esta corriendo" W
-	exit 0
+contar_instancias interprete
+if [ $CANTINSTA -gt 1 ]; then 
+    imprimir "Interpete ya esta corriendo" W
+    exit 0
 fi
 
 imprimir "Interprete iniciado" I
@@ -415,10 +422,27 @@ if [ ! $ENTORNO_INICIALIZADO ]; then
 	exit $ENOENTORNO
 fi
 
+# Los directorios donde se moveran los archivos, de no existir, se crean
+if [ ! -d "$DIRNEW" ]; then
+    # Si existe un archivo con el nombre de uno de los directorios
+    #+se esta ante un error severo.
+    if [ -e "$DIRNEW" ]; then
+        imprimir "El directorio de aceptados $DIRNEW no es un directorio" SE
+        exit $ENODIR
+    fi
+    mkdir "$DIRNEW"
+fi
+if [ ! -d "$DIROLD" ]; then
+    if [ -e "$DIROLD" ]; then
+        imprimir "El directorio de aceptados $DIROLD no es un directorio" SE
+        exit $ENODIR
+    fi
+    mkdir "$DIROLD"
+fi
+
 #Cuenta la cantidad de archivos
 CANTARCH=$(ls $DIROK| wc -l)
 imprimir "Inicio de Interprete, Cantidad de Archivos: $CANTARCH" I
-
 
 LISTAOK=$(ls -1 $DIROK)
 ARCHIVOSOK=( $LISTAOK ) # Array que contiene cada linea de la lista como un elemento
