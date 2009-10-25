@@ -271,6 +271,22 @@ sub imprimirConsulta{
   print "\n";
 }
 
+sub imprimirModificacion(){
+ my $modificacionSinFormato=$_[0];
+  chomp($modificacionSinFormato);
+   my @entrada= split("-",$modificacionSinFormato);
+   
+#   printf '%12s %s',$entrada[0] ,"|";
+ #  printf '%12s %s',$entrada[] ,"|";
+ #  printf '%12s %s',$entrada[] ,"|";
+ #  printf '%12s %s',$entrada[] ,"|";
+ #  printf '%12s %s',$entrada[] ,"|";
+ #  printf '%12s %s',$entrada[] ,"|";
+ #  printf '%12s %s',$entrada[] ,"|";
+   
+   
+}
+
 sub imprimirEncabezadoConsulta{
   printf '%42s %s',"Parametros","|";
   printf '%9s %s',"Cant Con","|";
@@ -284,6 +300,8 @@ sub imprimirEncabezadoConsulta{
 }
 
 sub procesarModificacion{
+
+  
 
   my ($rCons,$rPpiFiltrado) = @_;
   my $modificacion;
@@ -302,7 +320,7 @@ sub procesarModificacion{
     
     @entradaMaestro = split("-",$ppiFiltrado{$nContrato});
     
-    $modificacion = $modificacion.join("-", @entradaMaestro[1,2,3,8,6,10..14], 
+    $modificacion = $modificacion.join("-", @entradaMaestro[1,2,3],$nContrato,@entradaMaestro[8,6,10..14], 
                                        @entradaConsulta[3],$fecha,$usId)."\n";
   }
   
