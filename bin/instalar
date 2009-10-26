@@ -48,19 +48,19 @@ fi
 
 ### Paso 1 ###
 # Registro el inicio de la instalacion
-echo "Inicio de instalacion" > $LOGINSTALL
+echo "Inicio de instalacion" > "$LOGINSTALL"
 
 ### Paso 2 ###
 # Muestro y grabo la ubicacion del archivo de logs
-echo "Log de la instalacion: $LOGINSTALL" | tee -a $LOGINSTALL
+echo "Log de la instalacion: $LOGINSTALL" | tee -a "$LOGINSTALL"
 
 ### Paso 3 ###
 # Muestro y grabo la ubicacion del directorio de instalacion
-echo "Directorio de instalacion: $grupo/inst" | tee -a $LOGINSTALL
+echo "Directorio de instalacion: $grupo/inst" | tee -a "$LOGINSTALL"
 
 ### Paso 4 ###
 # Muestro y grabo la ubicacion del directorio de los parametros de configuracion
-echo "Directorio de configuracion: $grupo/conf" | tee -a $LOGINSTALL
+echo "Directorio de configuracion: $grupo/conf" | tee -a "$LOGINSTALL"
 
 ### Paso 5 ###
 # Al encontrar el archivo, busco los componentes que se encuentran instalados.
@@ -78,7 +78,7 @@ listaComponentesInstalarFinal=( $(ls "$grupo/inst/bin") )
 CONFFILE="$grupo/conf/practico.conf"
 
 # Se detecta si alguno de los componentes o ninguno ha sido instalado
-if [ -e $CONFFILE ]; then
+if [ -e "$CONFFILE" ]; then
 
   # Renombro el archivo de configuracion existente, para que no se elimine en la creacion
   # del nuevo.
@@ -141,7 +141,7 @@ while [ "$REPLY" != "Si" -a "$REPLY" != "No" ]; do
 done
 
 if [ $REPLY == "No" ]; then
-	echo "Instalacion Cancelada" | tee -a $LOGINSTALL
+	echo "Instalacion Cancelada" | tee -a "$LOGINSTALL"
 	exit 0
 fi
 
@@ -163,7 +163,7 @@ while [ "$REPLY" == "No" ]; do
 	ERRORPERL=1
 	LEASTVERSION=5
 	if [ $version -lt $LEASTVERSION ]; then
-		echo -e "Atencion! Esta instalacion solo puede ejecutada si Perl 5 o superior esta instalado.\nEfectúe la instalación de Perl y reinicie el proceso de instalación." | tee -a $LOGINSTALL
+		echo -e "Atencion! Esta instalacion solo puede ejecutada si Perl 5 o superior esta instalado.\nEfectúe la instalación de Perl y reinicie el proceso de instalación." | tee -a "$LOGINSTALL"
 		exit $ERRORPERL
 	fi
 	PERLVER=$( perl -V:version )
@@ -181,7 +181,7 @@ while [ "$REPLY" == "No" ]; do
 	### Paso 10 ###
 	# Guardo el espacio disponible
 	espacio=$( df -h "$grupo" | awk '{print $4}' | tail -n 1 )
-	echo "Espacio disponible en $DATADIR: $espacio" | tee -a $LOGINSTALL
+	echo "Espacio disponible en $DATADIR: $espacio" | tee -a "$LOGINSTALL"
 	DATASIZE=${espacio[@]:0:(${#espacio}-1)}
 	USIZE=${espacio[@]:(${#espacio}-1)}
 	
@@ -192,7 +192,7 @@ while [ "$REPLY" == "No" ]; do
 
 	# En caso de no recibir la respuesta esperada, salgo de la instalacion
 	if [ "$REPLY" == "No" ]; then
-		echo "Instalacion Cancelada" | tee -a $LOGINSTALL
+		echo "Instalacion Cancelada" | tee -a "$LOGINSTALL"
 		exit 0
 	fi
 
@@ -251,15 +251,15 @@ done
 ### Paso 15 ###
 # Creo la estructura de los directorios
 echo "Creando Estructura de Directorio..."
-if [ ! -d $BINDIR ]; then
-	mkdir $BINDIR
+if [ ! -d "$BINDIR" ]; then
+	mkdir "$BINDIR"
 fi
-if [ ! -d $DATADIR ]; then
-	mkdir $DATADIR
+if [ ! -d "$DATADIR" ]; then
+	mkdir "$DATADIR"
 fi
 # En caso de que no se haya cambiado el directorio de los logs
-if [ ! -d $LOGDIR ]; then
-	mkdir $LOGDIR
+if [ ! -d "$LOGDIR" ]; then
+	mkdir "$LOGDIR"
 fi
 if [ ! -d "$grupo/conf" ]; then
 	mkdir "$grupo/conf"
@@ -268,23 +268,23 @@ fi
 
 ### Paso 16 y 17 ###
 # Creo el archivo de configuracion y guardo los elementos de las primeras 7 lineas
-echo "INSTDIR=/inst" > $CONFFILE
-echo "FILECONF=/conf/practico.conf" >> $CONFFILE
-echo "LOGFILE=/log/instalar.log" >> $CONFFILE
-echo "DATADIR=$DATADIR" >> $CONFFILE
-echo "PERLVER=$PERLVER" >> $CONFFILE
-echo "MAXLOG=$MAXLOG" >> $CONFFILE
-echo "USIZE=$USIZE" >> $CONFFILE
+echo "INSTDIR=/inst" > "$CONFFILE"
+echo "FILECONF=/conf/practico.conf" >> "$CONFFILE"
+echo "LOGFILE=/log/instalar.log" >> "$CONFFILE"
+echo "DATADIR=$DATADIR" >> "$CONFFILE"
+echo "PERLVER=$PERLVER" >> "$CONFFILE"
+echo "MAXLOG=$MAXLOG" >> "$CONFFILE"
+echo "USIZE=$USIZE" >> "$CONFFILE"
 
 # Copio los registros correspondientes a las instalaciones anteriores, si las hay
 if [ -e "$CONFFILE.temp" ]; then
-  cat "$CONFFILE.temp" | tee -a $CONFFILE
+  cat "$CONFFILE.temp" | tee -a "$CONFFILE"
   #rm "$CONFFILE.old"
   #mv "$CONFFILE.old" "$CONFFILE"
   rm "$CONFFILE.temp"
 else
   # Dejo las lineas 8 y 9 reservadas
-  echo -e "\n" >> $CONFFILE
+  echo -e "\n" >> "$CONFFILE"
 fi
 
 USERNAME=$( echo `id -un` )
@@ -293,11 +293,11 @@ DATE=$(date '+%Y/%m/%d')
 for componente in ${listaComponentesInstalarFinal[@]}; do
   echo "Instalando $componente"
 	cp "$grupo/inst/bin/$componente" "$BINDIR/$componente"
-  echo "COMAND = $componente" >> $CONFFILE
-  echo "BINDIR = $BINDIR" >> $CONFFILE
-  echo "USERID = $USERNAME" >> $CONFFILE
-  echo "FECINS = $DATE" >> $CONFFILE
-  echo -e "LOGDIR = $LOGDIR\n" >> $CONFFILE
+  echo "COMAND = $componente" >> "$CONFFILE"
+  echo "BINDIR = $BINDIR" >> "$CONFFILE"
+  echo "USERID = $USERNAME" >> "$CONFFILE"
+  echo "FECINS = $DATE" >> "$CONFFILE"
+  echo -e "LOGDIR = $LOGDIR\n" >> "$CONFFILE"
 done
 
 # Copio los archivos de datos. Copio todos indiscriminadamente a la nueva carpeta.
@@ -307,4 +307,4 @@ cp -r "$grupo/inst/data/" "$DATADIR/"
 ### Paso 18 ###
 ### Paso 19 ###
 ### Paso 20 ###
-echo "Fin de Ejecucion" | tee -a $LOGINSTALL
+echo "Fin de Ejecucion" | tee -a "$LOGINSTALL"
