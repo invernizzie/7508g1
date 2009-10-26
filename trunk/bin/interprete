@@ -11,10 +11,6 @@ ERRDESC=( \
 [$ENODIR]="Directorio inexistente" \
 [$ENOFORMATO]="Error de formato" )
 
-#HIPOTESIS
-# Cuando valida que no haya archivos repetidos valida que los nombres no sean iguales y los contenidos tampoco.
-# Cuando pasa el formato numerico para la parte entera corta los primeros 10 caracteres de izquierda a derecha y para la decimal corta los primeros 2 caracteres de izquierda a derecha
-#DATADIR=../data
 T1="$GRUPO/conf/T1.tab"	# Tabla de Separadores
 T2="$GRUPO/conf/T2.tab"	# Tabla de Campos
 DIROK="$DATADIR/ok"	# Directorio de Aceptados
