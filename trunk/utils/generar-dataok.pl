@@ -36,9 +36,20 @@ $SEPARADOR = "-LOL-";
                          );
 
 @ALFANUMS = ("A".."Z", "0".."9");
+@NUMS = ("0".."9");
 
 sub randInt {
   return int(rand() * $_[0]);
+}
+
+
+sub randNumStr {
+  my $long = @_[0];
+  my $ret = "";
+  foreach my $n (1..$long) {
+    $ret = $ret.$NUMS[randInt($#NUMS + 1)];
+  }
+  return $ret;
 }
 
 sub randStr {
@@ -319,10 +330,13 @@ sub chamullarValor {
     my ($longEnt, $longDec) = split(/\./, $formatoDecim);
     my $rndLongEnt = (randInt($longEnt) + 1);
     my $rndLongDec = (randInt($longDec) + 1);
-    my $ent = randInt(10 ** $rndLongEnt);
-    my $dec = rand() < 0.5 ? 0 : randInt(10 ** $rndLongDec);
+    
+    # Originalmente $ent = randInt(10 ** $rndLongEnt); 
+    # Pero con longitudes mayores a 14 tiraba un número en notación exponencial.
+    my $ent = randNumStr($rndLongEnt);
+    my $dec = rand() < 0.5 ? 0 : randNumStr($rndLongDec);
     $valor = $dec == 0 ? $ent : join($sepDecimal, $ent, $dec);
-    #print "RANDOM decimal: $valor - $longEnt - $rndLongEnt -  $ent\n";
+    #print "RANDOM decimal: $valor - $longEnt - $rndLongEnt - $ent - $dec\n";
   }
   else { die "Formato $formato desconocido\n"; }
   
@@ -337,4 +351,5 @@ mkdir "./ok";
 foreach my $pais (@PAISES) {
   &generarArchivosDataOk($pais);
 }
+
 
