@@ -1,12 +1,14 @@
 \select@language {spanish}
-\contentsline {section}{\numberline {1}Hip\'otesis y Aclaraciones}{2}
-\contentsline {section}{\numberline {2}Problemas relevantes}{2}
-\contentsline {section}{\numberline {3}Archivo README: Instructivo de instalaci\'on}{2}
+\contentsline {section}{\numberline {1}Hip\IeC {\'o}tesis y Aclaraciones}{2}
+\contentsline {section}{\numberline {2}Problemas relevantes}{3}
+\contentsline {section}{\numberline {3}Archivo README: Instructivo de instalaci\IeC {\'o}n}{3}
 \contentsline {section}{\numberline {4}Comandos Desarrollados}{3}
 \contentsline {subsection}{\numberline {4.1}Comando Mover}{3}
-\contentsline {subsection}{\numberline {4.2}Comando Iniciar}{6}
-\contentsline {subsection}{\numberline {4.3}Comando Detectar}{11}
-\contentsline {subsection}{\numberline {4.4}Comando X}{16}
-\contentsline {section}{\numberline {5}Archivos}{17}
-\contentsline {subsection}{\numberline {5.1}Archivo de configuraci\'on general}{17}
-\contentsline {subsection}{\numberline {5.2}Archivo X}{17}
+\contentsline {subsection}{\numberline {4.2}Comando Iniciar}{7}
+\contentsline {subsection}{\numberline {4.3}Comando Detectar}{12}
+\contentsline {subsection}{\numberline {4.4}Comando Interprete}{17}
+\contentsline {subsection}{\numberline {4.5}Comando X}{27}
+\contentsline {subsection}{\numberline {4.6}Comando Reporte}{28}
+\contentsline {section}{\numberline {5}Archivos}{38}
+\contentsline {subsection}{\numberline {5.1}Archivo de configuraci\IeC {\'o}n general}{38}
+\contentsline {subsection}{\numberline {5.2}Archivo X}{38}

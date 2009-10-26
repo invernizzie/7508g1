@@ -3,7 +3,7 @@
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage[spanish]{babel}
-\usepackage [latin1]{inputenc}
+\usepackage [utf8]{inputenc}
 \usepackage{verbatim}
 
 \begin{document}
@@ -11,26 +11,30 @@
 \tableofcontents
 \clearpage
 
-\section{Hiptesis y Aclaraciones}
+\section{Hipótesis y Aclaraciones}
 
-Si al comando Mover se le pasa como destino un directorio, deber mover a ste el archivo de origen con su mismo nombre.
+Si al comando Mover se le pasa como destino un directorio, deberá mover a éste el archivo de origen con su mismo nombre.
 
-En los directorios utilizados para archivos de datos (\verb|$DATADIR| y sus subdirectorios), no deben existir archivos ordinarios con el nombre "dup", ya que no permitira la creacin de secuencias de duplicados (para lo cual \verb|dup| deber ser un directorio). En rigor de verdad esta situacin podra manejarse, ya sea eliminando los archivos ordinarios de nombre "dup" para crear directorios en su lugar, o descartando los archivos duplicados. Consideramos que no es correcto no almacenar los duplicados, y adems no es necesario tener archivos de nombre "dup", debido a que los archivos de entrada tienen nombres con estructuras definidas que no permiten a "dup" ser un archivo de entrada vlido.
+En los directorios utilizados para archivos de datos (\verb|$DATADIR| y sus subdirectorios), no deben existir archivos ordinarios con el nombre "dup", ya que no permitiría la creación de secuencias de duplicados (para lo cual \verb|dup| deber ser un directorio). En rigor de verdad esta situación podrí­a manejarse, ya sea eliminando los archivos ordinarios de nombre "dup" para crear directorios en su lugar, o descartando los archivos duplicados. Consideramos que no es correcto no almacenar los duplicados, y además no es necesario tener archivos de nombre "dup", debido a que los archivos de entrada tienen nombres con estructuras definidas que no permiten a "dup" ser un archivo de entrada válido.
 
-La correcta inicializacin del entorno queda indicada mediante una variable definida a tal propsito (\verb|$ENTORNO_INICIALIZADO|). Basta con chequear desde un comando la existencia de esta variable para asumir un entorno de trabajo vlido.
+La correcta inicialización del entorno queda indicada mediante una variable definida a tal propósito (\verb|$ENTORNO_INICIALIZADO|). Basta con chequear desde un comando la existencia de esta variable para asumir un entorno de trabajo válido.
 
-La ruta relativa de \verb|practico.conf| respecto del comando iniciar debe ser: \verb|../conf/practico.conf|. De esta forma se asegura que iniciar pueda encontrarlo y a partir de l recibir cualquier otra informacin sobre rutas que necesite para continuar su correcta ejecucin.
+La ruta relativa de \verb|practico.conf| respecto del comando iniciar debe ser: \verb|../conf/practico.conf|. De esta forma se asegura que iniciar pueda encontrarlo y a partir de él recibir cualquier otra información sobre rutas que necesite para continuar su correcta ejecución.
 
-DETALLAR HIPTESIS ASUMIDAS SOBRE LA ESTRUCTURA DE DIRECTORIOS PARA PERMITIR A INSTALAR ENCONTRAR \verb|practico.conf|.
+En el interprete la validación de que no haya archivos repetidos, se realiza verificando que los nombres no sean iguales y los contenidos tampoco. También como el enunciado pide que para los archivos de contratos generados se mantenga un formato numérico de diez caracteres para la parte entera y dos caracteres para la parte decimal, en caso de existir un número que tenga màs de esos caracteres (ya que puede suceder, al haber archivos cuyos registros tienen campos numéricos de hasta dieciseis caracteres para la parte entera) para la parte entera se cortarán los primeros diez caracteres de izquierda a derecha y para la decimal se cortarán los primeros dos caracteres de izquierda a derecha del número en cuestión.
+
+DETALLAR HIPÓTESIS ASUMIDAS SOBRE LA ESTRUCTURA DE DIRECTORIOS PARA PERMITIR A INSTALAR ENCONTRAR \verb|practico.conf|.
 
 \section{Problemas relevantes}
+
+Quizas no haya sido un problema relevante pero si una cuestión que nos demando un poco de trabajo el tema de manejar números decimales con "," como separador en vez de "." ya que tanto bash como perl toman los números de punto flotante con un "." como separador, con lo cual hubo que hacer manejos para poder mantener una cierta coherencia con lo que pedia el enunciado y el lenguaje.
 
 DETALLAR PROBLEMAS ENCONTRADOS DURANTE EL DESARROLLO Y LAS PRUEBAS.
 
 
 
-\section{Archivo README: Instructivo de instalacin}
-Cuando est terminado el README insertar en el \verb|.tex| segn su ruta haciendo:
+\section{Archivo README: Instructivo de instalación}
+Cuando esté terminado el README insertar en el \verb|.tex| según su ruta haciendo:
 \begin{verbatim}
 \verbatiminput{ruta/README}
 \end{verbatim}
@@ -40,37 +44,37 @@ Cuando est terminado el README insertar en el \verb|.tex| segn su ruta haciendo:
 \begin{description}
 	\item [Tipo de comando:] Solicitado
 	
-	\item [Archivos de entrada:] Archivo especificado por el parmetro 1
+	\item [Archivos de entrada:] Archivo especificado por el parámetro 1
 	
-	\item [Archivos de salida:] Archivo o directorio especificado por el parmetro 2; archivo de log del comando que lo invoca: \verb|$LOGDIR/comando.log|
+	\item [Archivos de salida:] Archivo o directorio especificado por el parámetro 2; archivo de log del comando que lo invoca: \verb|$LOGDIR/comando.log|
 	
-	\item [Parmetros:]
+	\item [Parámetros:]
 	\begin{enumerate}
 		\item Archivo de origen a mover
 		\item Archivo o directorio de destino
-		\item (Opc.) Comando que invoca a mover, permite guardar informacin en su log
+		\item (Opc.) Comando que invoca a mover, permite guardar información en su log
 	\end{enumerate}
 	
-	\item [Ejemplos de invocacin:]
+	\item [Ejemplos de invocación:]
 	Sea \verb|a1| la ruta a un archivo existente, \verb|d1| un directorio existente, invocando como:
 	\begin{verbatim}$ mover a1 d1\end{verbatim}
-	el comando mueve el archivo a1 al directorio \verb|d2|, informando que la operacin es exitosa. Por mover se entiende que cambia el directorio padre del archivo origen.\\
-	Sea \verb|a1| un archivo existente, \verb|d2| una ruta invlida, invocando como:
+	el comando mueve el archivo a1 al directorio \verb|d2|, informando que la operación es exitosa. Por mover se entiende que cambia el directorio padre del archivo origen.\\
+	Sea \verb|a1| un archivo existente, \verb|d2| una ruta inválida, invocando como:
 	\begin{verbatim}$ mover a1 d2\end{verbatim}
 	el comando \verb|mv|, invocado por mover, informa que el directorio de destino no existe.\\
 	Sea \verb|a1| y \verb|ruta/a2| archivos existentes, donde \verb|ruta/dup| no existe, invocando como:
 	\begin{verbatim}$ mover a1 ruta/a2\end{verbatim}
-	el comando crea en ruta el subdirectorio \verb|dup|, y mueve all el archivo \verb|a1| con nombre \verb|a2.1|. Este representa el primer duplicado de \verb|a2|. Si se vuelve a invocar como:
+	el comando crea en ruta el subdirectorio \verb|dup|, y mueve allí­ el archivo \verb|a1| con nombre \verb|a2.1|. Este representa el primer duplicado de \verb|a2|. Si se vuelve a invocar como:
 	\begin{verbatim}$ mover ax ruta/a2\end{verbatim}
-	el comando mueve \verb|ax| a \verb|ruta/dup/a2.2|. As va formando una secuencia de archivos duplicados para no permitir la sobreescritura.\\
+	el comando mueve \verb|ax| a \verb|ruta/dup/a2.2|. Así­ va formando una secuencia de archivos duplicados para no permitir la sobreescritura.\\
 	Sea \verb|a1| un archivo existente, \verb|ruta/a1| otro archivo existente, invocando como:
 	\begin{verbatim}$ mover a1 ruta\end{verbatim}
-	el comando intenta mover \verb|a1| a \verb|ruta/a1|; al existir este archivo, se aade un duplicado a la secuencia de \verb|a1| (o se la inicia si no existen duplicados previos).\\
-	Sea \verb|a3| una ruta invlida, \verb|a4| una ruta vlida o invlida, invocando como:
+	el comando intenta mover \verb|a1| a \verb|ruta/a1|; al existir este archivo, se añade un duplicado a la secuencia de \verb|a1| (o se la inicia si no existen duplicados previos).\\
+	Sea \verb|a3| una ruta inválida, \verb|a4| una ruta válida o inválida, invocando como:
 	\begin{verbatim}$ mover a3 a4 com1\end{verbatim}
-	el comando informa que el archivo de origen es inexistente. Adems, por haber includo el tercer parmetro, el comando guarda en \verb|$LOGDIR/com1.log|, a travs del comando \verb|glog| todos los mensajes de informacin y/o error que, al igual que en las dems ejecuciones, tambin enva por la salida estndar.
+	el comando informa que el archivo de origen es inexistente. Además, por haber incluído el tercer parámetro, el comando guarda en \verb|$LOGDIR/com1.log|, a través del comando \verb|glog| todos los mensajes de información y/o error que, al igual que en las demás ejecuciones, también envía por la salida estándar.
 	
-	\item [Cdigo fuente:]
+	\item [Código fuente:]
 \end{description}
 {\footnotesize
 \verbatiminput{../bin/mover}
@@ -80,15 +84,15 @@ Cuando est terminado el README insertar en el \verb|.tex| segn su ruta haciendo:
 \begin{description}
 	\item [Tipo de comando:] Solicitado
 	
-	\item [Archivos de entrada:] El archivo de configuracin \verb|practico.conf|
+	\item [Archivos de entrada:] El archivo de configuración \verb|practico.conf|
 	
 	\item [Archivos de salida:] El archivo de log \verb|$LOGDIR/iniciar.log|
 	
-	\item [Ejemplo de invocacin:] El comando iniciar debe invocarse como
+	\item [Ejemplo de invocación:] El comando iniciar debe invocarse como
 	\begin{verbatim}$ . iniciar\end{verbatim}
-	El comando chequear la presencia en el archivo de configuracin \verb|practico.conf| de las variables indispensables para el correcto funcionamiento de todos los comandos. Solicitar parmetros necesarios para el comando detectar: cantidad mxima de ciclos de ejecucin y tiempo de espera entre ciclos, expresado en minutos. Tambin dar la posibilidad de ejecutar detectar a continuacin, o bien recibir indicaciones de cmo hacerlo manualmente. La ejecucin de este comando deja inicializado el entorno de trabajo para la sesin de bash actual. Cualquier otra sesin de bash en que se quieran utilizar los comandos del trabajo, no representar un entorno vlido si no se ejecuta en ella el comando iniciar.
+	El comando chequeará la presencia en el archivo de configuración \verb|practico.conf| de las variables indispensables para el correcto funcionamiento de todos los comandos. Solicitará parámetros necesarios para el comando detectar: cantidad máxima de ciclos de ejecución y tiempo de espera entre ciclos, expresado en minutos. También dará la posibilidad de ejecutar detectar a continuación, o bien recibir indicaciones de cómo hacerlo manualmente. La ejecución de este comando deja inicializado el entorno de trabajo para la sesión de bash actual. Cualquier otra sesión de bash en que se quieran utilizar los comandos del trabajo, no representará un entorno válido si no se ejecuta en ella el comando iniciar.
 	
-	\item [Cdigo fuente:]
+	\item [Código fuente:]
 \end{description}
 {\footnotesize
 \verbatiminput{../bin/iniciar}
@@ -102,11 +106,11 @@ Cuando est terminado el README insertar en el \verb|.tex| segn su ruta haciendo:
 	
 	\item [Archivos de salida:] Archivos de \verb|$DATADIR| que cumplen con el criterio de validez de nombres
 	
-	\item [Ejemplos de invocacin:]	El comando solo puede invocarse como
+	\item [Ejemplos de invocación:]	El comando solo puede invocarse como
 	\begin{verbatim}$ detectar\end{verbatim}
-	de esta manera, lo que hace es verificar la validez de los archivos ubicados en el directorio \verb|$DATADIR|, para as colocar los correctos como archivos de entrada del intrprete en \verb|$DATADIR/ok|, y los incorrectos en \verb|$DATADIR/nok|.
+	de esta manera, lo que hace es verificar la validez de los archivos ubicados en el directorio \verb|$DATADIR|, para así colocar los correctos como archivos de entrada del intérprete en \verb|$DATADIR/ok|, y los incorrectos en \verb|$DATADIR/nok|.
 	
-	\item [Cdigo fuente:]
+	\item [Código fuente:]
 \end{description}
 {\footnotesize
 \verbatiminput{../bin/detectar}
@@ -135,7 +139,7 @@ Cuando est terminado el README insertar en el \verb|.tex| segn su ruta haciendo:
 	\begin{verbatim}$ interprete\end{verbatim}
 	de esta manera, lo que hace es procesar los archivos que se encuentran en el directorio \verb|$DATADIR/ok|, procesarlos y generar los archivos de contrato, con los cuales se llega a un formato estandar, denominados \verb|$DATADIR/new/CONTRAT.<pais>| en el directorio \verb|$DATADIR/new|. Los archivos ya procesados los deja en el directorio \verb|$DATADIR/old|, y los repetidos en \verb|$DATADIR/nok|.
 	
-	\item [Cdigo fuente:]
+	\item [Código fuente:]
 \end{description}
 {\footnotesize
 \verbatiminput{../bin/interprete}
@@ -145,33 +149,33 @@ Cuando est terminado el README insertar en el \verb|.tex| segn su ruta haciendo:
 \begin{description}
 	\item [Tipo de comando:] [Solicitado | Auxiliar]
 	
-	\item [Justificacin:] (de su uso si es auxiliar)
+	\item [Justificación:] (de su uso si es auxiliar)
 	
 	\item [Archivos de entrada:]
 	
 	\item [Archivos de salida:]
 	
-	\item [Parmetros:] (si tiene)
+	\item [Parámetros:] (si tiene)
 	
 	\item [Opciones:] (si tiene)
 	
-	\item [Ejemplos de invocacin:]
+	\item [Ejemplos de invocación:]
 	
-	\item [Cdigo fuente:]
+	\item [Código fuente:]
 \end{description}
 % IMPORTANTE: Reemplazar tabulador por 4 espacios en los archivos fuente
 {\footnotesize
 %\verbatiminput{ruta relativa al archivo fuente}
 }
-%     
+% á é í ó ú
 \subsection{Comando Reporte}
 \begin{description}
 	\item [Tipo de comando:] Solicitado
 	
 	\item [Archivos de entrada:]
 		\begin{enumerate}
-		\item Archivo de Contratos de Prstamos Personales ubicado en \verb|$grupo/datadir/new/CONTRAT.<pais>|
-		\item Archivo Maestro Prstamos Personales Impagos ubicado en \verb|$grupo/datadir/mae/PPI.mae|
+		\item Archivo de Contratos de Préstamos Personales ubicado en \verb|$grupo/datadir/new/CONTRAT.<pais>|
+		\item Archivo Maestro Préstamos Personales Impagos ubicado en \verb|$grupo/datadir/mae/PPI.mae|
 		\item Tabla de Paises y Sistemas ubicadas en \verb|$grupo/conf/p-s.tab|
 		\end{enumerate}
 
@@ -182,40 +186,40 @@ Cuando est terminado el README insertar en el \verb|.tex| segn su ruta haciendo:
 		\item Archivo de Modificaciones de Contratos \verb|$grupo/datadir/new/MODIF.<pais>|
 		\end{enumerate}
 
-	\item [Ejemplos de invocacin:]	El comando solo puede invocarse como
+	\item [Ejemplos de invocación:]	El comando solo puede invocarse como
 	\begin{verbatim}$ reporte\end{verbatim}
 	de esta manera, se carga un menu interactivo en donde el usuario puede:
 		\begin{enumerate}
-		\item Cargar parmetros de la consulta a realizar
-		\item Activar o desactivar la grabacin de los listados de consulta
-		\item Activar o desactivar la grabacin de modificaciones de contrato
-		\item Realizar la consulta en base a los parmetros ingresados por teclado
+		\item Cargar parámetros de la consulta a realizar
+		\item Activar o desactivar la grabación de los listados de consulta
+		\item Activar o desactivar la grabación de modificaciones de contrato
+		\item Realizar la consulta en base a los parámetros ingresados por teclado
 		\end{enumerate}
 
-	\item [Cdigo fuente:]
+	\item [Código fuente:]
 \end{description}
 {\footnotesize
 \verbatiminput{../bin/reporte.pl}
 }
 
 \section{Archivos}
-\subsection{Archivo de configuracin general}
+\subsection{Archivo de configuración general}
 \begin{description}
 	\item [Nombre:] \verb|$GRUPO/practico.conf|
-	\item [Estructura:] Este archivo consta de lneas que pueden ser de alguno de los siguientes tipos:
+	\item [Estructura:] Este archivo consta de líneas que pueden ser de alguno de los siguientes tipos:
 	\begin{itemize}
 		\item En blanco
-		\item Comentario, comenzando la lnea con \verb|#| sin espacios previos
-		\item Definicin de una variable en formato bash: \verb|VARIABLE=VALOR|. El valor puede contener espacios internos, si debe tener espacios al comienzo deben escapearse o encomillarse, aunque se recomienda especialmente no utilizar espacios en las rutas.
+		\item Comentario, comenzando la línea con \verb|#| sin espacios previos
+		\item Definición de una variable en formato bash: \verb|VARIABLE=VALOR|. El valor puede contener espacios internos, si debe tener espacios al comienzo deben escapearse o encomillarse, aunque se recomienda especialmente no utilizar espacios en las rutas.
 	\end{itemize}
-	Este archivo debe tener como mnimo una serie de variables indispensables que el comando instalar generar. Por tal motivo se recomienda que en caso de modificacin no se eliminen variables previamente creadas, solo se las modifique y se agreguen variables nuevas.
+	Este archivo debe tener como mínimo una serie de variables indispensables que el comando instalar generará. Por tal motivo se recomienda que en caso de modificación no se eliminen variables previamente creadas, solo se las modifique y se agreguen variables nuevas.
 \end{description}
 
 \subsection{Archivo X}
 \begin{description}
 	\item [Nombre:] Su nombre
-	\item [Estructura:] Descripcin de la estructura
-	\item [Justificacin:] (de su uso si no es requerido por el enunciado)
+	\item [Estructura:] Descripción de la estructura
+	\item [Justificación:] (de su uso si no es requerido por el enunciado)
 \end{description}
 
 
