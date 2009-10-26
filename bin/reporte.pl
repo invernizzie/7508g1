@@ -222,7 +222,7 @@ sub filtrarArchivo {
     # Filtros!
     my ($pasaFiltro, $nContrato) = &$funcionFiltro($linea, @filtros);
     if ($pasaFiltro){
-      $filtrado{$nContrato} = $linea;
+      $filtrado{$nContrato} = &convNotacionPunto($linea);
     }
   }
   
@@ -266,7 +266,7 @@ sub imprimirConsulta{
   my @entrada= split("-",$consultaSinFormato);
     
   foreach my $campo (@entrada){
-    printf '%9s %s' , $campo,"|";           
+    printf '%9s %s' , convNotacionComa($campo),"|";           
   }
   print "\n";
 }
@@ -287,6 +287,26 @@ sub imprimirModificacion(){
    
 }
 
+sub convNotacionPunto{
+  $nroOriginal= $_[0];
+  @partes=split(",",$nroOriginal);
+  $numero =join(".",@partes);
+  return $numero;
+}
+
+sub convNotacionComa{
+  $nroOriginal= $_[0];
+#  print "Numero Or" . $nroOriginal;
+  @partes=split(/\./,$nroOriginal);
+
+ # print "partes ".$partes[0];
+  
+  $numero=join(",",@partes);
+
+ # print "Numero " . $numero;
+  return "$numero";
+}
+
 sub imprimirEncabezadoConsulta{
   printf '%42s %s',"Parametros","|";
   printf '%9s %s',"Cant Con","|";
@@ -300,8 +320,6 @@ sub imprimirEncabezadoConsulta{
 }
 
 sub procesarModificacion{
-
-  
 
   my ($rCons,$rPpiFiltrado) = @_;
   my $modificacion;
@@ -356,6 +374,7 @@ sub realizarConsulta{
       # Calcula el monto restante.
       my ($MT_CRD, $MT_IMPAGO, $MT_INDE, $MT_OTRSUMDC) = 
           @arrayMaestro[10,11,13,14];
+  
       my $montoMaestro = $MT_CRD + $MT_IMPAGO + $MT_INDE - $MT_OTRSUMDC;
       my $estadoMaestro = @arrayMaestro[6];
     
@@ -428,12 +447,12 @@ sub realizarConsulta{
   
   if ($grabarListados){ 
     open(LISTADOS,">$archivoListados");
-    print LISTADOS $consultaA;
-    print LISTADOS $consultaB;
-    print LISTADOS $consultaC;
-    print LISTADOS $consultaD;
-    print LISTADOS $consultaE;
-    print LISTADOS $consultaF;
+    print LISTADOS convNotacionComa($consultaA);
+    print LISTADOS convNotacionComa($consultaB);
+    print LISTADOS convNotacionComa($consultaC);
+    print LISTADOS convNotacionComa($consultaD);
+    print LISTADOS convNotacionComa($consultaE);
+    print LISTADOS convNotacionComa($consultaF);
     close(LISTADOS);
   };
  
@@ -442,11 +461,11 @@ sub realizarConsulta{
   my $modicaciones = &procesarModificacion(\@consC,\%ppiFiltrado).
                      &procesarModificacion(\@consE2,\%ppiFiltrado).
                      &procesarModificacion(\@consF2,\%ppiFiltrado);
-  print "$modicaciones\n";
+  print convNotacionComa($modicaciones) . "\n";
 
   if ($grabarModificaciones){
     open(MODIFICACIONES,">$archivoModificaciones");
-    print MODIFICACIONES $modicaciones;
+    print MODIFICACIONES convNotacionComa($modicaciones);
     close(MODIFICACIONES);
   }
   
