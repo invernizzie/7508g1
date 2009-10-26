@@ -114,8 +114,6 @@ if [ ${#listaComponentesInstalarFinal[@]} -eq 0 ]; then
 	exit 0
 fi
 
-echo -e  "InstalarFinal = ${#listaComponentesInstalarFinal[@]}\n Instalar = ${#listaComponentesInstalar[@]}"
-
 if [ ${#listaComponentesInstalarFinal[@]} -eq ${#listaComponentesInstalar[@]} ]; then
 	echo 	"Se instalaran todos los componentes"
 else
@@ -293,6 +291,7 @@ DATE=$(date '+%Y/%m/%d')
 for componente in ${listaComponentesInstalarFinal[@]}; do
   echo "Instalando $componente"
 	cp "$grupo/inst/bin/$componente" "$BINDIR/$componente"
+  chmod +x "$BINDIR/$componente"
   echo "COMAND = $componente" >> "$CONFFILE"
   echo "BINDIR = $BINDIR" >> "$CONFFILE"
   echo "USERID = $USERNAME" >> "$CONFFILE"
