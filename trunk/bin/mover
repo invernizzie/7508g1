@@ -9,7 +9,7 @@ ENOENTORNO=14
 # Funcion para imprimir por consola y al log
 # Uso: imprimir mensaje [tipo]
 imprimir() {
-    echo $1
+    #echo $1
     
     if [ $USAR_LOG ]; then
         glog "$COMANDO" $2 "$1"
