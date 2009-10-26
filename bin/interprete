@@ -22,7 +22,7 @@ CONTRATOS="$DATADIR/new/CONTRAT" # Nombre de los Contratos
 # Funcion para imprimir por consola y al log
 # Uso: imprimir mensaje [tipo]
 imprimir() {
-	echo $1
+	#echo $1
 	glog "interprete" $2 "$1"
 }
 
