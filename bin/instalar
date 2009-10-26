@@ -17,7 +17,7 @@
 function elementExists() 
 {
 	if [ -z "$1" ]; then
-		echo "0"
+		echo "-1"
 		return 1
 	fi
 
@@ -29,7 +29,7 @@ function elementExists()
 		fi
 	done
 
-	echo "0"
+	echo "-1"
 	return 1
 }
 
@@ -82,29 +82,28 @@ if [ -e $CONFFILE ]; then
 
   # Renombro el archivo de configuracion existente, para que no se elimine en la creacion
   # del nuevo.
-  mv "$CONNFILE" "$CONNFILE.old"
+  mv "$CONFFILE" "$CONFFILE.old"
 
 	# Construyo la lista de los componentes que tengo instalados, y otras dos
 	# con los datos que tengo que mostrar.
-	grep -e COMAND -e USERID -e FECINS "$CONNFILE.old" > "$CONNFILE.temp"
-	listaComponentesInstalados=( $(grep "COMAND =" "$CONNFILE.temp" | sed 's/COMAND =//g') )
-	listaUsuariosInstalados=( $(grep "USERID =" "$CONNFILE.temp" | sed 's/USERID =//g') )
-	listaFechasInstalados=( $(grep "FECINS =" "$CONNFILE.temp" | sed 's/FECINS =//g') )
+	grep -e COMAND -e BINDIR -e USERID -e FECINS -e LOGDIR -e '^$' "$CONFFILE.old" > "$CONFFILE.temp"
+	listaComponentesInstalados=( $(grep "COMAND =" "$CONFFILE.temp" | sed 's/COMAND =//g') )
+	listaUsuariosInstalados=( $(grep "USERID =" "$CONFFILE.temp" | sed 's/USERID =//g') )
+	listaFechasInstalados=( $(grep "FECINS =" "$CONFFILE.temp" | sed 's/FECINS =//g') )
 
 
 	# Determino y muestro la lista de componentes instalados. Recorro la
 	# lista de los componentes que tengo que instalar, y chequeo si se
 	# encuentran instalados. En ese caso, muestro su informacion
-	for componente in ${listaComponentesInstalar[@]}; do
+	#for componente in ${listaComponentesInstalar[@]}; do
+  for (( i=(${#listaComponentesInstalar[@]}-1); i>=0; i-- )); do
+    componente=${listaComponentesInstalar[$i]}
 		comparacion=$(elementExists $componente)
-		if [ $comparacion != "0" ]; then
-			unset ${listaComponentesInstalarFinal[$comparacion]}
+		if [ $comparacion != "-1" ]; then
+			unset listaComponentesInstalarFinal[$i]
 			echo "Comando $componente instalado el ${listaFechasInstalados[$comparacion]} por ${listaUsuariosInstalados[$comparacion]}"
 		fi
 	done
-
-  rm "$CONNFILE.old"
-  rm "$CONNFILE.temp"
 
 fi
 
@@ -115,6 +114,7 @@ if [ ${#listaComponentesInstalarFinal[@]} -eq 0 ]; then
 	exit 0
 fi
 
+echo -e  "InstalarFinal = ${#listaComponentesInstalarFinal[@]}\n Instalar = ${#listaComponentesInstalar[@]}"
 
 if [ ${#listaComponentesInstalarFinal[@]} -eq ${#listaComponentesInstalar[@]} ]; then
 	echo 	"Se instalaran todos los componentes"
@@ -276,11 +276,19 @@ echo "PERLVER=$PERLVER" >> $CONFFILE
 echo "MAXLOG=$MAXLOG" >> $CONFFILE
 echo "USIZE=$USIZE" >> $CONFFILE
 
-# Dejo las lineas 8 y 9 reservadas
-echo -e "\n" >> $CONFFILE
+# Copio los registros correspondientes a las instalaciones anteriores, si las hay
+if [ -e "$CONFFILE.temp" ]; then
+  cat "$CONFFILE.temp" | tee -a $CONFFILE
+  #rm "$CONFFILE.old"
+  #mv "$CONFFILE.old" "$CONFFILE"
+  rm "$CONFFILE.temp"
+else
+  # Dejo las lineas 8 y 9 reservadas
+  echo -e "\n" >> $CONFFILE
+fi
 
 USERNAME=$( echo `id -un` )
-DATE=$(date '+%Y/%m/%d %H:%M:%S')
+DATE=$(date '+%Y/%m/%d')
 # Copio los componentes que no estan instalados y los agrego al archivo de configuracion
 for componente in ${listaComponentesInstalarFinal[@]}; do
   echo "Instalando $componente"
