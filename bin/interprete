@@ -35,7 +35,7 @@ imprimir() {
 # Almacena la cantidad contada en CANTINST
 contar_instancias() {
 	if [ -z $1 ]; then
-	return
+		return
 	fi
     
 	# De los procesos existentes, se cuentan las instancias del buscado
@@ -362,7 +362,7 @@ transformar_numericos(){
 		D_MT_RESTANTE=0	
 	fi
 	
-	# Transforma cada monto al formato correspondiente (corta los primeros 10 caracteres de la parte entera y los 2 primeros caracteres de la parte decimal) y 		los une con una coma en el medio
+	# Transforma cada monto al formato correspondiente (corta los primeros 10 caracteres de la parte entera y los 2 primeros caracteres de la parte decimal) y los une con una coma en el medio
 	MT_CRD=$( echo $E_MT_CRD| cut --characters=1-10 ),$( echo $D_MT_CRD| cut --characters=1-2 )
 	MT_IMPAGO=$( echo $E_MT_IMPAGO| cut --characters=1-10 ),$( echo $D_MT_IMPAGO| cut --characters=1-2 )
 	MT_OTRSUMDC=$( echo $E_MT_OTRSUMDC| cut --characters=1-10 ),$( echo $D_MT_OTRSUMDC| cut --characters=1-2 )
@@ -424,8 +424,7 @@ fi
 
 # Los directorios donde se moveran los archivos, de no existir, se crean
 if [ ! -d "$DIRNEW" ]; then
-    # Si existe un archivo con el nombre de uno de los directorios
-    #+se esta ante un error severo.
+    # Si existe un archivo con el nombre de uno de los directorios se esta ante un error severo.
     if [ -e "$DIRNEW" ]; then
         imprimir "El directorio de aceptados $DIRNEW no es un directorio" SE
         exit $ENODIR
