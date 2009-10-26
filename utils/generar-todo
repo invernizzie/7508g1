@@ -1,8 +1,8 @@
 #! /bin/bash
 
-# Borra lo viejo.
-rm -v CONTRAT.A CONTRAT.C
-rm -rv ok
+# Debería borar lo viejo, pero trea problemas con svn.
+#rm -v CONTRAT.A CONTRAT.C
+#rm -rv ok
 
 # Genera todo.
 ./generar-contratos.pl
