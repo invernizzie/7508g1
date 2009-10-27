@@ -4,11 +4,13 @@
 \contentsline {section}{\numberline {3}Archivo README: Instructivo de instalaci\IeC {\'o}n}{3}
 \contentsline {section}{\numberline {4}Comandos Desarrollados}{3}
 \contentsline {subsection}{\numberline {4.1}Comando Mover}{3}
-\contentsline {subsection}{\numberline {4.2}Comando Iniciar}{7}
-\contentsline {subsection}{\numberline {4.3}Comando Detectar}{12}
-\contentsline {subsection}{\numberline {4.4}Comando Interprete}{17}
-\contentsline {subsection}{\numberline {4.5}Comando X}{27}
-\contentsline {subsection}{\numberline {4.6}Comando Reporte}{28}
-\contentsline {section}{\numberline {5}Archivos}{38}
-\contentsline {subsection}{\numberline {5.1}Archivo de configuraci\IeC {\'o}n general}{38}
-\contentsline {subsection}{\numberline {5.2}Archivo X}{38}
+\contentsline {subsection}{\numberline {4.2}Comando Instalar}{7}
+\contentsline {subsection}{\numberline {4.3}Comando Iniciar}{8}
+\contentsline {subsection}{\numberline {4.4}Comando Detectar}{13}
+\contentsline {subsection}{\numberline {4.5}Comando Interprete}{18}
+\contentsline {subsection}{\numberline {4.6}Comando Vlog}{29}
+\contentsline {subsection}{\numberline {4.7}Comando Reporte}{37}
+\contentsline {subsection}{\numberline {4.8}Comando X}{52}
+\contentsline {section}{\numberline {5}Archivos}{53}
+\contentsline {subsection}{\numberline {5.1}Archivo de configuraci\IeC {\'o}n general}{53}
+\contentsline {subsection}{\numberline {5.2}Archivo X}{53}
