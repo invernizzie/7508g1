@@ -1,10 +1,18 @@
 \documentclass[12pt]{article}
 \pagestyle{plain}
+
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage[spanish]{babel}
 \usepackage [utf8]{inputenc}
 \usepackage{verbatim}
+
+%\usepackage{amsmath}
+%\usepackage{tabulary}
+%\usepackage[spanish]{babel}
+%\usepackage[ansinew]{inputenc}
+%\usepackage{graphicx}
+%\usepackage{float}
 
 \begin{document}
 
@@ -15,7 +23,9 @@
 
 Si al comando Mover se le pasa como destino un directorio, deberá mover a éste el archivo de origen con su mismo nombre.
 
-En los directorios utilizados para archivos de datos (\verb|$DATADIR| y sus subdirectorios), no deben existir archivos ordinarios con el nombre "dup", ya que no permitiría la creación de secuencias de duplicados (para lo cual \verb|dup| deber ser un directorio). En rigor de verdad esta situación podrí­a manejarse, ya sea eliminando los archivos ordinarios de nombre "dup" para crear directorios en su lugar, o descartando los archivos duplicados. Consideramos que no es correcto no almacenar los duplicados, y además no es necesario tener archivos de nombre "dup", debido a que los archivos de entrada tienen nombres con estructuras definidas que no permiten a "dup" ser un archivo de entrada válido.
+En los directorios utilizados para archivos de datos (\verb|$DATADIR| y sus subdirectorios), no deben existir archivos ordinarios con el nombre ``dup'', ya que no permitiría la creación de secuencias de duplicados (para lo cual \verb|dup| deber ser un directorio). 
+En rigor de verdad esta situación podría manejarse, ya sea eliminando los archivos ordinarios de nombre ``dup'' para crear directorios en su lugar, o descartando los archivos duplicados. 
+Consideramos que no es correcto no almacenar los duplicados, y además no es necesario tener archivos de nombre ``dup'', debido a que los archivos de entrada tienen nombres con estructuras definidas que no permiten a ``dup'' ser un archivo de entrada válido.
 
 La correcta inicialización del entorno queda indicada mediante una variable definida a tal propósito (\verb|$ENTORNO_INICIALIZADO|). Basta con chequear desde un comando la existencia de esta variable para asumir un entorno de trabajo válido.
 
@@ -63,10 +73,11 @@ Cuando esté terminado el README insertar en el \verb|.tex| según su ruta hacie
 	\begin{verbatim}$ mover a1 d2\end{verbatim}
 	el comando \verb|mv|, invocado por mover, informa que el directorio de destino no existe.\\
 	Sea \verb|a1| y \verb|ruta/a2| archivos existentes, donde \verb|ruta/dup| no existe, invocando como:
-	\begin{verbatim}$ mover a1 ruta/a2\end{verbatim}
-	el comando crea en ruta el subdirectorio \verb|dup|, y mueve allí­ el archivo \verb|a1| con nombre \verb|a2.1|. Este representa el primer duplicado de \verb|a2|. Si se vuelve a invocar como:
+	\begin{verbatim}$ mover a1 ruta/a2 \end{verbatim}
+	el comando crea en ruta el subdirectorio \verb|dup|, y mueve allí el archivo \verb|a1| con nombre \verb|a2.1|. 
+	Este representa el primer duplicado de \verb|a2|. Si se vuelve a invocar como:
 	\begin{verbatim}$ mover ax ruta/a2\end{verbatim}
-	el comando mueve \verb|ax| a \verb|ruta/dup/a2.2|. Así­ va formando una secuencia de archivos duplicados para no permitir la sobreescritura.\\
+	el comando mueve \verb|ax| a \verb|ruta/dup/a2.2|. Así va formando una secuencia de archivos duplicados para no permitir la sobreescritura.\\
 	Sea \verb|a1| un archivo existente, \verb|ruta/a1| otro archivo existente, invocando como:
 	\begin{verbatim}$ mover a1 ruta\end{verbatim}
 	el comando intenta mover \verb|a1| a \verb|ruta/a1|; al existir este archivo, se añade un duplicado a la secuencia de \verb|a1| (o se la inicia si no existen duplicados previos).\\
@@ -207,9 +218,9 @@ Cuando esté terminado el README insertar en el \verb|.tex| según su ruta hacie
 	
 	\item [Código fuente:]
 \end{description}
-{\footnotesize
-\verbatiminput{../bin/interprete}
-}
+	{\footnotesize
+		\verbatiminput{codigo/interpeteExp}
+	}
 
 \subsection{Comando Glog}
 \begin{description}
