@@ -277,8 +277,7 @@ echo "USIZE=$USIZE" >> "$CONFFILE"
 # Copio los registros correspondientes a las instalaciones anteriores, si las hay
 if [ -e "$CONFFILE.temp" ]; then
   cat "$CONFFILE.temp" | tee -a "$CONFFILE"
-  #rm "$CONFFILE.old"
-  #mv "$CONFFILE.old" "$CONFFILE"
+  rm "$CONFFILE.old"
   rm "$CONFFILE.temp"
 else
   # Dejo las lineas 8 y 9 reservadas
@@ -298,6 +297,9 @@ for componente in ${listaComponentesInstalarFinal[@]}; do
   echo "FECINS = $DATE" >> "$CONFFILE"
   echo -e "LOGDIR = $LOGDIR\n" >> "$CONFFILE"
 done
+
+# Agrego el valor de la variable grupo
+echo "GRUPO = $grupo" >> "$CONFFILE"
 
 # Copio los archivos de datos. Copio todos indiscriminadamente a la nueva carpeta.
 # Si existen duplicados, se reemplazan por la version que se esta instalando.
