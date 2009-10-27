@@ -21,7 +21,6 @@ DIRNOK="$DATADIR/nok"              # Directorio de rechazados
 # Funcion para imprimir por consola y al log
 # Uso: imprimir mensaje [tipo]
 imprimir() {
-    #echo $1 TODO toque ACA tomas!!!!! 
     glog "detectar" $2 "$1"
 }
 

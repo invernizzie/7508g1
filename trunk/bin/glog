@@ -5,50 +5,44 @@ ENOARGS=65
 ENOENTORNO=14
 
 if [ ! $ENTORNO_INICIALIZADO ]; then
-	echo "Glog: Entorno no inicializado"
-	exit $ENOENTORNO
+    echo "Glog: Entorno no inicializado"
+    exit $ENOENTORNO
 fi
 
 if [ $# -lt 2 ]; then
-	echo "Glog: Uso: `basename $0` comando tipo_msj=I mensaje"
-	#glog glog E "Cantidad de parametros incorrecta"
-	exit $ENOARGS
+    echo "Glog: Uso: `basename $0` comando tipo_msj=I mensaje"
+    #glog glog E "Cantidad de parametros incorrecta"
+    exit $ENOARGS
 fi
 
 COMANDO=$1
 
 # Funcion para imprimir por consola y al log
 imprimir() {
-	echo $1
-	
-	glog $COMANDO $2 "$1"
+    echo $1
+    
+    glog $COMANDO $2 "$1"
 }
 
 if [ $# -eq 2 ]; then
-	MENSAJE=$2
-	TIPO_MSJ=I
+    MENSAJE=$2
+    TIPO_MSJ=I
 else 
-	MENSAJE=$3
-	TIPO_MSJ=$2
+    MENSAJE=$3
+    TIPO_MSJ=$2
 fi
 
 if [ $# -gt 3 ]; then
-	imprimir "Glog: Se esperaban 2 o 3 parametros y se recibieron $#" W
+    imprimir "Glog: Se esperaban 2 o 3 parametros y se recibieron $#" W
 fi
 
 if [[ $TIPO_MSJ != [IWE] ]] && [ $TIPO_MSJ != SE ]; then
-	imprimir "Glog: Tipo de mensaje invalido" W
+    imprimir "Glog: Tipo de mensaje invalido" W
 fi
-
-# Chequea si existe la variable LOGDIR.
-# Hipotesis: si no existe es el directorio actual.
-#if [ -z $LOGDIR ]; then
-#	LOGDIR=.
-#fi
 
 # Si el directorio de logs no existe lo crea.
 if [ ! -e "$LOGDIR" ]; then
-	mkdir -p "$LOGDIR"
+    mkdir -p "$LOGDIR"
 fi
 
 # Escribe en el archivo log.
@@ -61,14 +55,14 @@ SIZE=$(stat -c %s "$LOGFILE")
 # Cuidado! Si MAXLOG esta declarada pero no es un entero, 
 # la comparacion falla y el script termina con error
 if [ ! -z $MAXLOG ] && [ $SIZE -gt $MAXLOG ]; then
-	tail -n $MAXLINES "$LOGFILE" >"$LOGFILE.temp"
-	mv -f "$LOGFILE.temp" "$LOGFILE"
+    tail -n $MAXLINES "$LOGFILE" >"$LOGFILE.temp"
+    mv -f "$LOGFILE.temp" "$LOGFILE"
 fi
 
 # Si se sigue pasando de tamanio, se trunca a cero.
 SIZE=$(stat -c %s "$LOGFILE")
 if [ ! -z $MAXLOG ] && [ $SIZE -gt $MAXLOG ]; then
-	>"$LOGFILE"
+    >"$LOGFILE"
 fi
 
 exit 0
