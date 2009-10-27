@@ -1,0 +1,496 @@
+#! /bin/bash 
+
+ENOENTORNO=14
+ENODATADIR=15
+ENODIR=16
+ENOFORMATO=17
+
+ERRDESC=( \
+[$ENOENTORNO]="Entorno no inicializado" \
+[$ENODATADIR]="Directorio de entrada inexistente" \
+[$ENODIR]="Directorio inexistente" \
+[$ENOFORMATO]="Error de formato" )
+
+T1="$GRUPO/conf/T1.tab"	# Tabla de Separadores
+T2="$GRUPO/conf/T2.tab"	# Tabla de Campos
+DIROK="$DATADIR/ok"	# Directorio de Aceptados
+DIRNOK="$DATADIR/nok"	# Directorio de Rechazados
+DIRNEW="$DATADIR/new"	# Directorio de Contratos
+DIROLD="$DATADIR/old"	# Directorio de Procesados
+# Nombre de los Contratos
+CONTRATOS="$DATADIR/new/CONTRAT" 
+
+# Funcion para imprimir por consola y al log
+# Uso: imprimir mensaje [tipo]
+imprimir() {
+	#echo $1
+	glog "interprete" $2 "$1"
+}
+
+# Funcion para contar las instancias de un 
+# proceso dado su nombre.
+# Uso: contar_instancias proceso
+# Almacena la cantidad contada en CANTINST
+contar_instancias() {
+	if [ -z $1 ]; then
+		return
+	fi
+    
+	# De los procesos existentes, se cuentan 
+	#las instancias del buscado
+	CANTINSTA=$(ps -e | grep "$1" | wc -l)
+
+	# Debe restarse uno porque el subshell abierto 
+	# incrementa la cantidad de instancias
+	if [ "$1" = interprete ]; then (( CANTINSTA -= 1 )); fi
+}
+
+# Funcion para validar que no haya archivos que se procesen dos veces,
+# para eso mira dentro de DIROLD archivo por archivo y compara contenidos
+# Uso: validar_repetido archivo
+validar_repetido(){		
+	if [ -z $1 ]; then
+		return
+	fi
+	
+	LISTAOLD=$(ls -1 $DIROLD)
+	ARCHIVOSOLD=( $LISTAOLD ) # Array que contiene cada linea de la lista como un elemento
+	for ARCHIVOOLD in ${ARCHIVOSOLD[*]}
+	do
+		# No se procesan directorios
+		if [ -d "$DIROLD/$ARCHIVOOLD" ]; then continue; fi
+
+		# Si son el mismo archivo entonces se devuelve true		
+		if [ $(cmp "$DIROLD/$ARCHIVOOLD" "$1"| wc -l) = 0 ]; then
+			true
+			return
+		fi
+
+	done
+	false
+	
+}
+# A partir del nombre del archivo obtiene el pais, el sistema, el anio 
+# y el mes y con eso puede determinar los separadaores
+# Uso: obtener_pais_sistema_anio_mes nombrearchivo
+# Almacena el pais en PAIS, el sistema en SISTEMA el anio en ANIO 
+# y el mes en MES, el separador de campo en SEPCAMPO y 
+# el separador decimal en SEPDECIMAL
+obtener_pais_sistema_anio_mes(){
+	PAIS=$(expr "$1" : '\([^-]*\)')
+	SISTEMA=$(expr "$1" : '[^-]*-\([^-]*\)')
+	ANIO=$(expr "$1" : '[^-]*-[^-]*-\([^-]*\)')
+	MES=$(expr "$1" : '.*-\(.*\)')
+}
+
+# Obtiene los separadores para luego poder trabajar.
+# Uso: determinar_separadores
+# Almacena el separador de campo en SEPCAMPO y el separador decimal en SEPDECIMAL
+determinar_separadores(){
+	SEPCAMPO=$(grep "$PAIS-$SISTEMA" $T1| cut -d '-' -f 3) 
+	SEPDECIMAL=$(grep "$PAIS-$SISTEMA" $T1| cut -d '-' -f 4)
+}
+
+# Obtiene los formatos y las posiciones de los campos para luego poder trabajar.
+# Uso: determinar_campos
+# Almacena cada posicion en NOMBRECAMPOP y cada formato en NOMBRECAMPOF
+determinar_campos(){
+	
+	# Fecha del contrato.
+	DT_FLUXP=$( grep "$PAIS-$SISTEMA-DT_FLUX-.*-1$" $T2| cut -d '-' -f 4 )
+	DT_FLUXF=$( grep "$PAIS-$SISTEMA-DT_FLUX-.*-1$" $T2| cut -d '-' -f 5 )
+
+	# Estado contable.
+	CD_STATCTBP=$( grep "$PAIS-$SISTEMA-CD_STATCTB-.*-1$" $T2| cut -d '-' -f 4 )
+	CD_STATCTBF=$( grep "$PAIS-$SISTEMA-CD_STATCTB-.*-1$" $T2| cut -d '-' -f 5 )
+
+	# Numero de contrato.
+	NO_CONTRATP=$( grep "$PAIS-$SISTEMA-NO_CONTRAT-.*-1$" $T2| cut -d '-' -f 4 )
+	NO_CONTRATF=$( grep "$PAIS-$SISTEMA-NO_CONTRAT-.*-1$" $T2| cut -d '-' -f 5 )
+
+	# Monto impago.
+	MT_IMPAGOP=$( grep "$PAIS-$SISTEMA-MT_IMPAGO-.*-1$" $T2| cut -d '-' -f 4 )
+	MT_IMPAGOF=$( grep "$PAIS-$SISTEMA-MT_IMPAGO-.*-1$" $T2| cut -d '-' -f 5 )
+
+	# Monto del credito.
+	MT_CRDP=$( grep "$PAIS-$SISTEMA-MT_CRD-.*-1$" $T2| cut -d '-' -f 4 )
+	MT_CRDF=$( grep "$PAIS-$SISTEMA-MT_CRD-.*-1$" $T2| cut -d '-' -f 5 )
+
+	# Otras sumas del cliente.
+	MT_OTRSUMDCP=$( grep "$PAIS-$SISTEMA-MT_OTRSUMDC-.*-1$" $T2| cut -d '-' -f 4 )
+	MT_OTRSUMDCF=$( grep "$PAIS-$SISTEMA-MT_OTRSUMDC-.*-1$" $T2| cut -d '-' -f 5 )
+
+	# Monto de interes devengado.
+	MT_INDEP=$( grep "$PAIS-$SISTEMA-MT_INDE-.*-1$" $T2| cut -d '-' -f 4 )
+	MT_INDEF=$( grep "$PAIS-$SISTEMA-MT_INDE-.*-1$" $T2| cut -d '-' -f 5 )
+
+	# Monto de interes no devengado.
+	MT_INNODEP=$( grep "$PAIS-$SISTEMA-MT_INNODE-.*-1$" $T2| cut -d '-' -f 4 )
+	MT_INNODEF=$( grep "$PAIS-$SISTEMA-MT_INNODE-.*-1$" $T2| cut -d '-' -f 5 )
+
+}
+
+
+# Lee las fechas y las transforma en el formato requerido
+# Uso: transformar_fecha linea
+# Deja la fecha del contrato en DT_FLUX
+transformar_fecha(){
+	
+	# Lee la fecha de la linea extraida	
+	DT_FLUXL=$( echo $1| cut -d $SEPCAMPO -f $DT_FLUXP)	
+	
+	# Separo segun la convencion dada
+	# Los primeros 6 caracteres son el formato en si
+	FORMATO_DT_FLUX=$( echo $DT_FLUXF| cut --characters=1-6)
+	# Los ultimos caracteres son la longitud
+	LONGITUD_DT_FLUX=$( echo $DT_FLUXF| cut --characters=7-$((${#DT_FLUXF}-1)) )
+	
+	# Valida que no se exceda ni se tenga menor longitud que la pedida,
+	# si es asi termina la ejecucion con un error de formato.
+	if [ $LONGITUD_DT_FLUX -ne ${#DT_FLUXL} ]; then	
+		echo "Interprete: Error de formato."		
+		exit $ENOFORMATO
+	fi
+	
+	# Transforma la fecha al formato correspondiente
+	if [ "$FORMATO_DT_FLUX" = "ddmmyy" ] ; then
+		if [ $LONGITUD_DT_FLUX = 8 ]; then
+			DT_FLUX="$( echo $DT_FLUXL| cut --characters=1-2)/$( echo $DT_FLUXL| cut --characters=3-4)
+			/$( echo $DT_FLUXL| cut --characters=5-8)"
+		else
+			DT_FLUX="$( echo $DT_FLUXL| cut --characters=1-2)/$( echo $DT_FLUXL| cut --characters=4-5)
+			/$( echo $DT_FLUXL| cut --characters=7-10)";		
+		fi	
+	else
+		if [ $LONGITUD_DT_FLUX = 8 ]; then
+			DT_FLUX="$( echo $DT_FLUXL| cut --characters=7-8)/$( echo $DT_FLUXL| cut --characters=5-6)
+			/$( echo $DT_FLUXL| cut --characters=1-4)"
+		else
+			DT_FLUX="$( echo $DT_FLUXL| cut --characters=9-10)/$( echo $DT_FLUXL| cut --characters=6-7)
+			/$( echo $DT_FLUXL| cut --characters=1-4)"
+		fi
+	fi
+}
+
+# Lee los alfanumericos y los transforma en el formato requerido
+# Uso: transformar_alfanumericos linea
+# Deja el estado contable en CD_STATCTB y el numero de contrato en NO_CONTRAT
+transformar_alfanumericos(){
+
+	# Lee el estado contable de la linea extraida	
+	CD_STATCTBL=$( echo $1| cut -d $SEPCAMPO -f $CD_STATCTBP)
+	
+	# Lee el numero de contrato de la linea extraida	
+	NO_CONTRATL=$( echo $1| cut -d $SEPCAMPO -f $NO_CONTRATP)
+
+	# El caracter entre el $ y el . es la longitud maxima, obtiene la longitud 
+	# maxima de ambos campos
+	LONGITUD_CD_STATCTB=$( echo $CD_STATCTBF| cut -d '$' -f 2| cut -d '.' -f 1)
+	LONGITUD_NO_CONTRAT=$( echo $NO_CONTRATF| cut -d '$' -f 2| cut -d '.' -f 1)
+	
+	# Valida que no se superen las longitudes maximas, si es asi termina la ejecucion 
+	# con un error de formato
+	if [ ${#CD_STATCTBL} -gt $LONGITUD_CD_STATCTB ]; then
+		echo "Interprete: Error de formato."		
+		exit $ENOFORMATO
+	fi
+	if [ ${#NO_CONTRATL} -gt $LONGITUD_NO_CONTRAT ]; then
+		echo "Interprete: Error de formato."	
+		exit $ENOFORMATO
+	fi
+	
+	# Transforma el estado contable al formato correspondiente
+	if [ "$CD_STATCTBL" = "SNA" ] || [ "$CD_STATCTBL" = "SNIM" ]; then		
+		CD_STATCTB="SANO"
+	fi
+	if [ "$CD_STATCTBL" = "DTCA" ] || [ "$CD_STATCTBL" = "DTXA" ]; then		
+		CD_STATCTB="DUDOSO"
+	fi
+	if [ "$CD_STATCTBL" = "CTX" ]; then		
+		CD_STATCTB="CTX"
+	fi		
+	
+	# Transforma el numero de contrato al formato correspondiente
+	NO_CONTRAT=$( echo $NO_CONTRATL )
+	
+
+}
+
+# Lee los numericos y los transforma en el formato requerido
+# Uso: transformar_numericos linea
+# Deja el monto de credito en MT_CRD, el monto impago en MT_IMPAGO, el monto de 
+# otras sumas del cliente en MT_OTRSUMDC, el monto devengado en MT_INDE y el monto 
+# no devengado en MT_INNODE y el monto restante en MT_RESTANTE
+transformar_numericos(){
+	
+	# Lee el monto de credito de la linea extraida	
+	MT_CRDL=$( echo $1| cut -d $SEPCAMPO -f $MT_CRDP)
+
+	# Lee el monto impago de la linea extraida	
+	MT_IMPAGOL=$( echo $1| cut -d $SEPCAMPO -f $MT_IMPAGOP)
+
+	# Lee el monto de otras sumas del cliente de la linea extraida	
+	MT_OTRSUMDCL=$( echo $1| cut -d $SEPCAMPO -f $MT_OTRSUMDCP)
+
+	# Lee el monto de interes devengado de la linea extraida	
+	MT_INDEL=$( echo $1| cut -d $SEPCAMPO -f $MT_INDEP)
+
+	# Lee el monto de interes no devengado de la linea extraida	
+	MT_INNODEL=$( echo $1| cut -d $SEPCAMPO -f $MT_INNODEP)
+
+	# Longitudes maximas monto de credito
+	LONGMAXE_MT_CRD=$( echo $MT_CRDF| cut -d '.' -f 1| cut --characters=7- )
+	LONGMAXD_MT_CRD=$( echo $MT_CRDF| cut -d '.' -f 2 )
+	
+	# Longitudes maximas monto impago
+	LONGMAXE_MT_IMPAGO=$( echo $MT_IMPAGOF| cut -d '.' -f 1| cut --characters=7- )
+	LONGMAXD_MT_IMPAGO=$( echo $MT_IMPAGOF| cut -d '.' -f 2 )
+
+	# Longitudes maximas monto otras sumas
+	LONGMAXE_MT_OTRSUMDC=$( echo $MT_OTRSUMDCF| cut -d '.' -f 1| cut --characters=7- )
+	LONGMAXD_MT_OTRSUMDC=$( echo $MT_OTRSUMDCF| cut -d '.' -f 2 )
+
+	# Longitudes maximas monto devengado
+	LONGMAXE_MT_INDE=$( echo $MT_INDEF| cut -d '.' -f 1| cut --characters=7- )
+	LONGMAXD_MT_INDE=$( echo $MT_INDEF| cut -d '.' -f 2 )
+
+	# Longitudes maximas monto no devengado
+	LONGMAXE_MT_INNODE=$( echo $MT_INNODEF| cut -d '.' -f 1| cut --characters=7- )
+	LONGMAXD_MT_INNODE=$( echo $MT_INNODEF| cut -d '.' -f 2 )
+
+	# Obtiene la parte entera y decimal del monto de credito y valida que no se
+	# superen las longitudes maximas, si es asi se sale con un error de formato
+	E_MT_CRD=$( echo $MT_CRDL| cut -d $SEPDECIMAL -f 1 -s )
+	D_MT_CRD=$( echo $MT_CRDL| cut -d $SEPDECIMAL -f 2 -s )
+
+	if [ ${#E_MT_CRD} -gt $LONGMAXE_MT_CRD ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+	if [ ${#D_MT_CRD} -gt $LONGMAXD_MT_CRD ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+	
+	# Obtiene la parte entera y decimal del monto impago y valida que no se superen 
+	# las longitudes maximas, si es asi se sale con un error de formato
+	E_MT_IMPAGO=$( echo $MT_IMPAGOL| cut -d $SEPDECIMAL -f 1 -s )
+	D_MT_IMPAGO=$( echo $MT_IMPAGOL| cut -d $SEPDECIMAL -f 2 -s )
+	if [ ${#E_MT_IMPAGO} -gt  $LONGMAXE_MT_IMPAGO ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+	if [ ${#D_MT_IMPAGO} -gt $LONGMAXD_MT_IMPAGO ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+
+	# Obtiene la parte entera y decimal del monto de otras sumas y valida que no se superen 
+	# las longitudes maximas, si es asi se sale con un error de formato
+	E_MT_OTRSUMDC=$( echo $MT_OTRSUMDCL| cut -d $SEPDECIMAL -f 1 -s )
+	D_MT_OTRSUMDC=$( echo $MT_OTRSUMDCL| cut -d $SEPDECIMAL -f 2 -s )
+	if [ ${#E_MT_OTRSUMDC} -gt $LONGMAXE_MT_OTRSUMDC ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+	if [ ${#D_MT_OTRSUMDC} -gt $LONGMAXD_MT_OTRSUMDC ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+
+	# Obtiene la parte entera y decimal del monto devengado y valida que no se superen las 
+	# longitudes maximas, si es asi se sale con un error de formato
+	E_MT_INDE=$( echo $MT_INDEL| cut -d $SEPDECIMAL -f 1 -s )
+	D_MT_INDE=$( echo $MT_INDEL| cut -d $SEPDECIMAL -f 2 -s )
+	if [ ${#E_MT_INDE} -gt $LONGMAXE_MT_INDE ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+	if [ ${#D_MT_INDE} -gt $LONGMAXD_MT_INDE ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+
+	# Obtiene la parte entera y decimal del monto no devengado y valida que no se superen las 
+	# longitudes maximas, si es asi se sale con un error de formato
+	E_MT_INNODE=$( echo $MT_INNODEL| cut -d $SEPDECIMAL -f 1 -s )
+	D_MT_INNODE=$( echo $MT_INNODEL| cut -d $SEPDECIMAL -f 2 -s )
+	if [ ${#E_MT_INNODE} -gt $LONGMAXE_MT_INNODE ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+	if [ ${#D_MT_INNODE} -gt $LONGMAXD_MT_INNODE ]; then
+		echo "Interprete: Error de formato."
+		exit $ENOFORMATO
+	fi
+	
+	# Si el entero o el decimal estan vacios se los pone en cero
+	if [ "$E_MT_CRD" = "" ]; then		
+		E_MT_CRD=0
+	fi
+	if [ "$D_MT_CRD" = "" ]; then		
+		D_MT_CRD=0
+	fi
+	
+	if [ "$E_MT_IMPAGO" = "" ]; then		
+		E_MT_IMPAGO=0
+	fi
+	if [ "$D_MT_IMPAGO" = "" ]; then		
+		D_MT_IMPAGO=0
+	fi
+	
+	if [ "$E_MT_OTRSUMDC" = "" ]; then		
+		E_MT_OTRSUMDC=0	
+	fi
+	if [ "$D_MT_OTRSUMDC" = "" ]; then		
+		D_MT_OTRSUMDC=0
+	fi
+	
+	if [ "$E_MT_INDE" = "" ]; then		
+		E_MT_INDE=0	
+	fi
+	if [ "$D_MT_INDE" = "" ]; then		
+		D_MT_INDE=0
+	fi
+	
+	if [ "$E_MT_INNODE" = "" ]; then		
+		E_MT_INNODE=0
+	fi
+	if [ "$D_MT_INNODE" = "" ]; then		
+		D_MT_INNODE=0	
+	fi
+	
+	# Forma los numeros en el formato para sumar
+	MT_CRD=$E_MT_CRD.$D_MT_CRD
+	MT_IMPAGO=$E_MT_IMPAGO.$D_MT_IMPAGO
+	MT_OTRSUMDC=$E_MT_OTRSUMDC.$D_MT_OTRSUMDC
+	MT_INDE=$E_MT_INDE.$D_MT_INDE
+	MT_INNODE=$E_MT_INNODE.$D_MT_INNODE
+	
+	# Obtiene el monto restante
+	MT_RESTANTE=$(echo "$MT_CRD + $MT_IMPAGO + $MT_INDE -$MT_OTRSUMDC" | bc -l)
+	# Lo separa en parte decimal y entera
+	E_MT_RESTANTE=$( echo $MT_RESTANTE| cut -d '.' -f 1 -s )
+	D_MT_RESTANTE=$( echo $MT_RESTANTE| cut -d '.' -f 2 -s )
+	# Si el entero o el decimal estan vacios se los pone en cero
+	if [ "$E_MT_RESTANTE" = "" ]; then		
+		E_MT_RESTANTE=0
+	fi
+	if [ "$D_MT_RESTANTE" = "" ]; then		
+		D_MT_RESTANTE=0	
+	fi
+	
+	# Transforma cada monto al formato correspondiente (corta los primeros 10 caracteres 
+	# de la parte entera y los 2 primeros caracteres de la parte decimal) y los une con una 
+	# coma en el medio
+	MT_CRD=$( echo $E_MT_CRD| cut --characters=1-10 ),$( echo $D_MT_CRD| cut --characters=1-2 )
+	MT_IMPAGO=$( echo $E_MT_IMPAGO| cut --characters=1-10 ),$( echo $D_MT_IMPAGO| cut --characters=1-2 )
+	MT_OTRSUMDC=$( echo $E_MT_OTRSUMDC| cut --characters=1-10 ),$( echo $D_MT_OTRSUMDC| 
+		cut --characters=1-2 )
+	MT_INDE=$( echo $E_MT_INDE| cut --characters=1-10 ),$( echo $D_MT_INDE| 
+		cut --characters=1-2 )
+	MT_INNODE=$( echo $E_MT_INNODE| cut --characters=1-10 ),$( echo $D_MT_INNODE| 
+		cut --characters=1-2 )
+	MT_RESTANTE=$( echo $E_MT_RESTANTE| cut --characters=1-10 ),$( echo $D_MT_RESTANTE| 
+		cut --characters=1-2 )
+}
+
+# Va recorriendo linea por linea del archivo pasado como parametro y genera un nuevo registro 
+# en el archivo correspondiente con el formato correcto
+# Uso: procesar archivo
+procesar(){
+	
+	REGISTROS=$(wc -l <$1)	
+	CUENTA=0
+	GRABADOS=0
+	# Se procesa cada linea de la tabla
+	{
+	while [ $CUENTA -lt $REGISTROS ]
+	do
+		# Se lee un registro de la tabla
+		read LINEA
+		# Si la linea esta vacia o comentada se saltea
+		if [ ${#LINEA} -lt 1 -o "${LINEA:0:1}" = "#" ]; then
+			(( REGISTROS -= 1 ))
+			continue
+		fi
+				
+		transformar_fecha $LINEA
+		transformar_alfanumericos $LINEA
+		# Si el contrato tiene estado contable CTX se descarta, en cualquier otro caso se almacena		
+		if [ "$CD_STATCTB" != "CTX" ]; then
+			transformar_numericos $LINEA
+			# Si el monto restante es mayor a 0 se guarda sino se descarta, no funciona bien						
+			if [ $( echo $MT_RESTANTE| cut --characters=1) != '-' ]; then
+				echo "$SISTEMA-$ANIO-$MES-$NO_CONTRAT-$DT_FLUX-$CD_STATCTB-$MT_CRD-$MT_IMPAGO-$MT_INDE
+					-$MT_INNODE-$MT_OTRSUMDC-$MT_RESTANTE-$(date +%d/%m/%Y)-$USER" >> $CONTRATOS.$PAIS
+				(( GRABADOS += 1 ))
+			fi
+		fi
+		(( CUENTA += 1 ))
+		
+	done
+	} < $1
+}
+
+# Solo se permite una instancia activa de este script.
+contar_instancias interprete
+if [ $CANTINSTA -gt 1 ]; then 
+    imprimir "Interpete ya esta corriendo" W
+    exit 0
+fi
+
+imprimir "Interprete iniciado" I
+
+# Valida que el ambiente este inicializado.
+if [ ! $ENTORNO_INICIALIZADO ]; then
+	echo "Interprete: Entorno no inicializado"
+	exit $ENOENTORNO
+fi
+
+# Los directorios donde se moveran los archivos, de no existir, se crean
+if [ ! -d "$DIRNEW" ]; then
+    # Si existe un archivo con el nombre de uno de los directorios se esta ante un 
+	# error severo.
+    if [ -e "$DIRNEW" ]; then
+        imprimir "El directorio de aceptados $DIRNEW no es un directorio" SE
+        exit $ENODIR
+    fi
+    mkdir "$DIRNEW"
+fi
+if [ ! -d "$DIROLD" ]; then
+    if [ -e "$DIROLD" ]; then
+        imprimir "El directorio de aceptados $DIROLD no es un directorio" SE
+        exit $ENODIR
+    fi
+    mkdir "$DIROLD"
+fi
+
+#Cuenta la cantidad de archivos
+CANTARCH=$(ls $DIROK| wc -l)
+imprimir "Inicio de Interprete, Cantidad de Archivos: $CANTARCH" I
+
+LISTAOK=$(ls -1 $DIROK)
+ARCHIVOSOK=( $LISTAOK ) # Array que contiene cada linea de la lista como un elemento
+# Para cada elemento del directorio se realiza el procesamiento necesario
+for ARCHIVOOK in ${ARCHIVOSOK[*]}
+do
+	# No se procesan directorios
+	if [ -d "$DIROK/$ARCHIVOOK" ]; then continue; fi
+	
+	# Si el archivo ya se proceso entonces se pasa al directorio nok, sino se trabaja 
+	# con el mismo	
+	if validar_repetido $DIROK/$ARCHIVOOK; then
+		mover "$DIROK/$ARCHIVOOK" $DIRNOK interprete
+		imprimir "Duplicado: $ARCHIVOOK" I
+	else
+		obtener_pais_sistema_anio_mes $ARCHIVOOK		
+		determinar_separadores
+		determinar_campos
+		procesar $DIROK/$ARCHIVOOK
+		mover "$DIROK/$ARCHIVOOK" $DIROLD interprete
+		imprimir "Registros de Input: $CUENTA. Registros  de Output: $GRABADOS" I
+	fi
+done
+
+imprimir "Fin de interprete" I
