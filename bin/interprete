@@ -5,6 +5,9 @@ ENODATADIR=15
 ENODIR=16
 ENOFORMATO=17
 
+# Necesario para el correcto funcionamiento de glog
+export LOGDIR=$intLOGDIR
+
 ERRDESC=( \
 [$ENOENTORNO]="Entorno no inicializado" \
 [$ENODATADIR]="Directorio de entrada inexistente" \

@@ -2,6 +2,9 @@
 
 ENOENTORNO=14
 
+# Necesario para el correcto funcionamiento de glog
+export LOGDIR=$repLOGDIR
+
 # Funcion para imprimir por consola y al log
 # Uso: imprimir mensaje [tipo]
 imprimir() {
