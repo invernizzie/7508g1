@@ -98,7 +98,7 @@ construir_expresion_regular() {
 	if [[ $? == $TRUE ]]; then
 		construir_rango $val $2 $3
 		reg_expr=$rango_valor	
-	else #TODO hay que ver que pasa si no es rango y es multivalor. :P	NO SE HACE	
+	else 
 		reg_expr=$val
 	fi
 }
@@ -127,7 +127,6 @@ uso() {
 ################################################################################
 
 #chequeamos que este inicializado el entorno.
-#TODO descomentar
 if [ ! $ENTORNO_INICIALIZADO ]; then
 	echo "Glog: Entorno no inicializado"
 	exit $ENOENTORNO
@@ -219,9 +218,6 @@ do
 	;;        
 	esac
 done
-
-#TODO comentar la linea siguiente si estamos usando el inicializador de ambiente.
-#LOGDIR=../log
 
 if [ $PARAM_COMANDO ]; then
 	egrep  $MOSTRARARCHIVO "$anio/$mes/$dia $hora:$minuto:..-$tipolog" "$LOGDIR/$PARAM_COMANDO.log"

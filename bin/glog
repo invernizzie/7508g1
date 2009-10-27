@@ -36,7 +36,6 @@ if [ $# -gt 3 ]; then
 	imprimir "Glog: Se esperaban 2 o 3 parametros y se recibieron $#" W
 fi
 
-# TODO ver de hacer esto de una mejor manera.
 if [[ $TIPO_MSJ != [IWE] ]] && [ $TIPO_MSJ != SE ]; then
 	imprimir "Glog: Tipo de mensaje invalido" W
 fi
@@ -48,7 +47,6 @@ fi
 #fi
 
 # Si el directorio de logs no existe lo crea.
-# TODO ¿Que pasa si existe pero es un archivo, no un directorio?
 if [ ! -e "$LOGDIR" ]; then
 	mkdir -p "$LOGDIR"
 fi
