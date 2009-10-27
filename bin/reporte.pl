@@ -73,6 +73,10 @@ sub mostrarSistemasValidos {
   }
 }
 
+sub obtenerAnioActual {
+  my @fecha = localtime(time);
+  return $fecha[5] + 1900;
+}
 
 # No valida nada.
 sub validacionNula{
@@ -96,7 +100,9 @@ sub validarSistema{
 sub validarAnio{
 
   my $anio = int(@_[0]); 
-  return $anio >= 2000 ? $anio : "";
+  #return $anio >= 2000 ? $anio : "";
+  
+  return 2000 <= $anio && $anio <= &obtenerAnioActual() ? $anio : "";
 }
 
 # Valida que un mes dado esté entre 1 y 12 y lo retorna.
@@ -356,8 +362,9 @@ sub procesarModificacion{
     
     @entradaMaestro = split("-",$ppiFiltrado{$nContrato});
   
-    my $consultaActual = join("-", @entradaMaestro[1,2,3],$nContrato,@entradaMaestro[8,6,10..14], 
-                                       @entradaConsulta[3],$fecha,$usId)."\n";
+    my $consultaActual = join("-", @entradaMaestro[1,2,3],$nContrato,
+                               @entradaMaestro[8,6,10..14], 
+                               @entradaConsulta[3],$fecha,$usId)."\n";
     push(@$rArrayModificaciones,$consultaActual);
     $modificacion = $modificacion.$consultaActual;
   }
@@ -409,11 +416,11 @@ sub realizarConsulta{
         case "SANO SANO"     { $igualMonto ? push(@consA,$lineaConsulta) 
                                            : push(@consC,$lineaConsulta); }
         case "DUDOSO DUDOSO" { $igualMonto ? push(@consB,$lineaConsulta) 
-	                                         : push(@consD,$lineaConsulta); }
+                                           : push(@consD,$lineaConsulta); }
         case "SANO DUDOSO"   { $igualMonto ? push(@consE2,$lineaConsulta) 
-	                                         : push(@consF2,$lineaConsulta); }
+                                           : push(@consF2,$lineaConsulta); }
         case "DUDOSO SANO"   { $igualMonto ? push(@consE1,$lineaConsulta) 
-	                                         : push(@consF1,$lineaConsulta); }
+                                           : push(@consF1,$lineaConsulta); }
 	      else { &glog("Estado inválido: $estados", "E"); }
       }
     }
