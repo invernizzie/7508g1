@@ -82,9 +82,7 @@ Cuando esté terminado el README insertar en el \verb|.tex| según su ruta hacie
 
 \subsection{Comando Instalar}
 \begin{description}
-	\item [Tipo de comando:] [Solicitado | Auxiliar]
-	
-	\item [Justificación:] (de su uso si es auxiliar)
+	\item [Tipo de comando:] Solicitado
 	
 	\item [Archivos de entrada:] 
 		El archivo de configuración, si es que existe, para una instalación anterior. Se encuentra en:
@@ -212,6 +210,57 @@ Cuando esté terminado el README insertar en el \verb|.tex| según su ruta hacie
 {\footnotesize
 \verbatiminput{../bin/interprete}
 }
+
+\subsection{Comando Glog}
+\begin{description}
+	\item [Tipo de comando:] Solicitado
+	
+	\item [Archivos de salida:] Los archivos correspondientes a los logs registrados. Estos archivos se encontrarán en el directorio: 
+		\begin{verbatim}
+			$LOGDIR
+		\end{verbatim}
+		%El log de la instalación se graba en el directorio fijo:
+	
+	\item [Parámetros:] 
+		El primer parametro es de caracter obligatorio.  Indica el comando que esta generando un log.
+
+		El segundo parametro es de caracter opcional. Indica el tipo de mensaje que puede ser informativo (I), un error severo (SE), un warning (W) o un error(E).
+		
+		El tercer mensaje es de caracter obligatorio. Indica el mensaje que se desea imprimir en el log.
+		
+	\item [Consideraciones:]
+		De acuerdo a lo solicitado en el enunciado, existe un tamaño máximo para el tamaño de los archivos de logs. 
+		Una vez que se supera este limite, el programa realiza un truncamiento del archivo dejando las ultimas 50 lineas.
+		Pese a que es altamente improbable, podría suceder que con estas 50 lineas se supere el tamaño máximo del archivo.
+		Por lo tanto, una vez que ya se ha realizado el truncamiento se verifica que el tamaño de dichas lineas no supere el tamaño máximo establecido.
+		En caso de superarlo, se dejaría al archivo vacío para que recupere la consistencia.
+		
+	\item [Ejemplos de invocación:]
+		
+		Existen dos formas distintas de invocar al comando: pasandole 2 o 3 parametros.
+		
+		\begin{verbatim}
+			glog <Comando> <Tipo de Mensaje> <Mensaje>
+			glog <Comando> <Mensaje>
+		\end{verbatim}
+		
+		Se puede observar un ejemplo de la invocación en la captura siguiente.
+		
+		\begin{figure}[H]
+		\centering
+		\includegraphics[scale=0.35]{imagenes/glog/01.png}
+		\end{figure}
+	
+		Se genera un archivo llamado \emph{prueba.log} con el siguiente contenido:
+	
+		\begin{figure}[H]
+		\centering
+		\includegraphics[scale=0.35]{imagenes/glog/02.png}
+		\end{figure}
+	
+	
+	\item [Código fuente:]
+\end{description}
 
 \subsection{Comando Vlog}
 \begin{description}
