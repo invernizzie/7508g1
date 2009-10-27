@@ -3,8 +3,10 @@
 # Codigos de error
 ENOARGS=65
 ENOFILE=66
-
 ENOENTORNO=14
+
+# Necesario para el correcto funcionamiento de glog
+export LOGDIR=$movLOGDIR
 
 # Funcion para imprimir por consola y al log
 # Uso: imprimir mensaje [tipo]

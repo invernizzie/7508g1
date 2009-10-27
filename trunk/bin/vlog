@@ -6,8 +6,12 @@ FALSE=0
 ENOENTORNO=14
 #fin definicion constantes
 
+# Necesario para el correcto funcionamiento de glog
+export LOGDIR=$vloLOGDIR
+
 ################################################################################
-# DEFINICION FUNCIONES AUXILIARES                                              # ################################################################################
+# DEFINICION FUNCIONES AUXILIARES                                              #
+################################################################################
 
 es_rango() {
 	if [ $(echo $1 | grep '\[.\{1,2\}-.\{1,2\}\]') ]; then
