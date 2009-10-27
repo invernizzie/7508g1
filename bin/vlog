@@ -14,116 +14,116 @@ export LOGDIR=$vloLOGDIR
 ################################################################################
 
 es_rango() {
-	if [ $(echo $1 | grep '\[.\{1,2\}-.\{1,2\}\]') ]; then
-	return $TRUE
-	fi
-	return $FALSE
+    if [ $(echo $1 | grep '\[.\{1,2\}-.\{1,2\}\]') ]; then
+    return $TRUE
+    fi
+    return $FALSE
 }
 
 #devuelve TRUE si el primer parametro esta entre el parametro 2 y el 3.
 dentro_rango(){
-	if [[ $( expr $2 \<= $1) == $TRUE ]]; then
-		if [[ $( expr $1 \<= $3) == $TRUE ]];then
-		return $TRUE
-		fi
-	fi
-	return $FALSE
+    if [[ $( expr $2 \<= $1) == $TRUE ]]; then
+        if [[ $( expr $1 \<= $3) == $TRUE ]];then
+        return $TRUE
+        fi
+    fi
+    return $FALSE
 }
 
 # setea rango1 rango12 rango2 rango22 segun el formato [**-**] donde * es un numero.
-# casos a evaluar [12-23] [11-1] [1-23] [1-2]. 
+# casos a evaluar [12-23] [11-1] [1-23] [1-2].
 get_rango() {
-	rango1=$( expr substr $1 3 1)	
-	if [[ $rango1 != - ]]; then
-		rango1=$( expr substr $1 2 1)
-		rango12=$( expr substr $1 3 1)
-		rango2=$( expr substr $1 6 1)
-		if [[ $rango2 == ] ]];then
-			rango2=0 # agrego un cero para tener decena = 0 
-			rango22=$( expr substr $1 5 1)
-		else
-			rango2=$( expr substr $1 5 1)
-			rango22=$( expr substr $1 6 1)
-		fi
-	else
-		rango1=0 # agrego un cero para tener decena = 0
-		rango12=$( expr substr $1 2 1)
-		rango2=$( expr substr $1 5 1)		
-		if [[ $rango2 == ] ]];then
-			rango2=0
-			rango22=$( expr substr $1 4 1)
-		else
-			rango2=$( expr substr $1 4 1)
-			rango22=$( expr substr $1 5 1)
-		fi
-	fi
+    rango1=$( expr substr $1 3 1)
+    if [[ $rango1 != - ]]; then
+        rango1=$( expr substr $1 2 1)
+        rango12=$( expr substr $1 3 1)
+        rango2=$( expr substr $1 6 1)
+        if [[ $rango2 == ] ]];then
+            rango2=0 # agrego un cero para tener decena = 0
+            rango22=$( expr substr $1 5 1)
+        else
+            rango2=$( expr substr $1 5 1)
+            rango22=$( expr substr $1 6 1)
+        fi
+    else
+        rango1=0 # agrego un cero para tener decena = 0
+        rango12=$( expr substr $1 2 1)
+        rango2=$( expr substr $1 5 1)
+        if [[ $rango2 == ] ]];then
+            rango2=0
+            rango22=$( expr substr $1 4 1)
+        else
+            rango2=$( expr substr $1 4 1)
+            rango22=$( expr substr $1 5 1)
+        fi
+    fi
 }
 
 
 #crea en la variable rango_valor una expresion regular para el rango dado
 #en el primer argumento. Ejemplo [1-30] --> [01-30] ; [12-20] --> [12-20]
 #Tambien chequea que los valores esten dentro del rango $2 y $3
-#tenemos esto [ rango1 rango12 rango2 rango22 ]	Luego para la reg exp tenemos 3 casos
+#tenemos esto [ rango1 rango12 rango2 rango22 ]    Luego para la reg exp tenemos 3 casos
 construir_rango() {
-	get_rango $1
-	dentro_rango $rango1$rango12 $2 $3
-	temp1=$?
-	dentro_rango $rango2$rango22 $2 $3
-	temp2=$?
-	if [[ $temp2 != $TRUE ]] || [[ $temp1 != $TRUE ]]; then
-		echo "rango invalido"
-		exit 0
-	fi 
-	
-	temp=$( expr $rango1 = $rango2 )
+    get_rango $1
+    dentro_rango $rango1$rango12 $2 $3
+    temp1=$?
+    dentro_rango $rango2$rango22 $2 $3
+    temp2=$?
+    if [[ $temp2 != $TRUE ]] || [[ $temp1 != $TRUE ]]; then
+        echo "rango invalido"
+        exit 0
+    fi
 
-	if [[ $temp == 1 ]];then
-		rango_valor="($rango1[$rango12-$rango22])"
-		return 0
-	fi
+    temp=$( expr $rango1 = $rango2 )
 
-	temp=$( expr $rango2 - $rango1)
-	if [[ $temp == 1 ]]; then
-		rango_valor="($rango1[$rango12-9]|$rango2[0-$rango22])"
-	else
-		#caso mas general.
-		temp1=$( expr $rango1 + 1)
-		temp2=$( expr $rango2 - 1)
-		rango_valor="($rango1[$rango12-9]|[$temp1-$temp2][0-9]|$rango2[0-$rango22])"
-	fi
+    if [[ $temp == 1 ]];then
+        rango_valor="($rango1[$rango12-$rango22])"
+        return 0
+    fi
+
+    temp=$( expr $rango2 - $rango1)
+    if [[ $temp == 1 ]]; then
+        rango_valor="($rango1[$rango12-9]|$rango2[0-$rango22])"
+    else
+        #caso mas general.
+        temp1=$( expr $rango1 + 1)
+        temp2=$( expr $rango2 - 1)
+        rango_valor="($rango1[$rango12-9]|[$temp1-$temp2][0-9]|$rango2[0-$rango22])"
+    fi
 
 }
 
 #construye una expresion regular y aloca el resultado en reg_expr. El argumento
-# 2 y 3 son la cota minima y maxima que pueden tomar los valores. 
+# 2 y 3 son la cota minima y maxima que pueden tomar los valores.
 construir_expresion_regular() {
-	val=$1 #suponemos no es rango, ni varios valores
-	es_rango $val
-	if [[ $? == $TRUE ]]; then
-		construir_rango $val $2 $3
-		reg_expr=$rango_valor	
-	else 
-		reg_expr=$val
-	fi
+    val=$1 #suponemos no es rango, ni varios valores
+    es_rango $val
+    if [[ $? == $TRUE ]]; then
+        construir_rango $val $2 $3
+        reg_expr=$rango_valor
+    else
+        reg_expr=$val
+    fi
 }
 
 # Muestra un help de como usar el comando.
 uso() {
-	echo "Modo de uso: vlog [OPCION]... [ARGUMENTO]  "
-	echo "[ARGUMENTO] puede ser una valor o un rango. "
-	echo "Ejemplo vlog -m [10-43] ; vlog -m 14"
-	echo "Por default, sin ningun parametro muestra todos los logs de todos los parametros"
-	echo "los argumentos posibles son: "
-	echo "-H	filtra por hora."
-	echo "-m	filtra por minutos"
-	echo "-D	filtra por dias"
-	echo "-M	filtra por mes"
-	echo "Los restantes no adminten rango"
-	echo "-A	filtra por anio"
-	echo "-l	filtra por tipo de mensaje de log( SE, E, I, W )"
-	echo "-c	filtra por tipo de comando"
-	echo "-b	no muestra de que archivos son los match"
-	echo "-h	muestra esta ayuda"
+    echo "Modo de uso: vlog [OPCION]... [ARGUMENTO]  "
+    echo "[ARGUMENTO] puede ser una valor o un rango. "
+    echo "Ejemplo vlog -m [10-43] ; vlog -m 14"
+    echo "Por default, sin ningun parametro muestra todos los logs de todos los parametros"
+    echo "los argumentos posibles son: "
+    echo "-H    filtra por hora."
+    echo "-m    filtra por minutos"
+    echo "-D    filtra por dias"
+    echo "-M    filtra por mes"
+    echo "Los restantes no adminten rango"
+    echo "-A    filtra por anio"
+    echo "-l    filtra por tipo de mensaje de log( SE, E, I, W )"
+    echo "-c    filtra por tipo de comando"
+    echo "-b    no muestra de que archivos son los match"
+    echo "-h    muestra esta ayuda"
 }
 
 ################################################################################
@@ -132,26 +132,26 @@ uso() {
 
 #chequeamos que este inicializado el entorno.
 if [ ! $ENTORNO_INICIALIZADO ]; then
-	echo "Glog: Entorno no inicializado"
-	exit $ENOENTORNO
+    echo "Glog: Entorno no inicializado"
+    exit $ENOENTORNO
 fi
 
 # Si el directorio de logs no existe sale del programa.
 if [ ! -e "$LOGDIR" ]; then
-	echo "No hay ningun log c"	
-	#mkdir -p $LOGDIR
+    echo "No hay ningun log c"
+    #mkdir -p $LOGDIR
 fi
 
 ###############################################################################
-#Estos son los parametros que podemos usar: 
-#Para el tipo de log: ES, E, I W 
+#Estos son los parametros que podemos usar:
+#Para el tipo de log: ES, E, I W
 #hora: se puede pasar varias horas separadas o un intervalo de horas.
 #ejemplo -H [1,2,12]   o   -H [3-8]
 #minutos: es exactamente igual a horas.
 #se utiliza con -m
 #fecha: aca lo hacemos por anio, mes y dia y con las mismas propiedades que hora
 #se utiliza con -D -M y -A respectivamente pero anio no acepta rango.
-#comando: tipo de comando a buscar en el glog 
+#comando: tipo de comando a buscar en el glog
 #se utiliza con -c
 ###############################################################################
 
@@ -167,65 +167,65 @@ MOSTRARARCHIVO=
 
 while getopts “l:H:m:D:M:A:c:hb” OPTION
 do
-	case $OPTION in
+    case $OPTION in
 
-	l) 
-	PARAM_TIPO_LOG=$OPTARG
-	if [[ $PARAM_TIPO_LOG != [IWE] ]] && [ $PARAM_TIPO_LOG != SE ]; then
-		echo "tipo de log invalido. Opciones: SE I W E" 
-		exit 0
-	fi
-	tipolog=$PARAM_TIPO_LOG
+    l)
+    PARAM_TIPO_LOG=$OPTARG
+    if [[ $PARAM_TIPO_LOG != [IWE] ]] && [ $PARAM_TIPO_LOG != SE ]; then
+        echo "tipo de log invalido. Opciones: SE I W E"
+        exit 0
+    fi
+    tipolog=$PARAM_TIPO_LOG
 
-	;;         
+    ;;
 
-	H)
-	PARAM_HORA=$OPTARG
-	construir_expresion_regular $PARAM_HORA 0 60
-	hora=$reg_expr		          
+    H)
+    PARAM_HORA=$OPTARG
+    construir_expresion_regular $PARAM_HORA 0 60
+    hora=$reg_expr
         ;;
 
         m)
         PARAM_MINUTO=$OPTARG
-	construir_expresion_regular $PARAM_MINUTO 0 60
-	minuto=$reg_expr
+    construir_expresion_regular $PARAM_MINUTO 0 60
+    minuto=$reg_expr
         ;;
-        
-	D)
+
+    D)
         PARAM_DIA=$OPTARG
-	construir_expresion_regular $PARAM_DIA 0 31
-	dia=$reg_expr
+    construir_expresion_regular $PARAM_DIA 0 31
+    dia=$reg_expr
         ;;
-        
-	M)
-	PARAM_MES=$OPTARG
-	construir_expresion_regular $PARAM_MES 0 12
-	mes=$reg_expr
-	;;
 
-	A)
-	PARAM_ANIO=$OPTARG
-	anio=$PARAM_ANIO
-	;;
+    M)
+    PARAM_MES=$OPTARG
+    construir_expresion_regular $PARAM_MES 0 12
+    mes=$reg_expr
+    ;;
 
-	c)
-	PARAM_COMANDO=$OPTARG
-	;;
+    A)
+    PARAM_ANIO=$OPTARG
+    anio=$PARAM_ANIO
+    ;;
 
-	b)
-	  MOSTRARARCHIVO="-h"
-	;;
-      
-	?)
-	uso
-	exit 0
-	;;        
-	esac
+    c)
+    PARAM_COMANDO=$OPTARG
+    ;;
+
+    b)
+      MOSTRARARCHIVO="-h"
+    ;;
+
+    ?)
+    uso
+    exit 0
+    ;;
+    esac
 done
 
 if [ $PARAM_COMANDO ]; then
-	egrep  $MOSTRARARCHIVO "$anio/$mes/$dia $hora:$minuto:..-$tipolog" "$LOGDIR/$PARAM_COMANDO.log"
+    egrep  $MOSTRARARCHIVO "$anio/$mes/$dia $hora:$minuto:..-$tipolog" "$LOGDIR/$PARAM_COMANDO.log"
 else
-	egrep $MOSTRARARCHIVO "$anio/$mes/$dia $hora:$minuto:..-$tipolog" "$LOGDIR/"*
+    egrep $MOSTRARARCHIVO "$anio/$mes/$dia $hora:$minuto:..-$tipolog" "$LOGDIR/"*
 fi
 
