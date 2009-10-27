@@ -80,6 +80,74 @@ Cuando esté terminado el README insertar en el \verb|.tex| según su ruta hacie
 \verbatiminput{../bin/mover}
 }
 
+\subsection{Comando Instalar}
+\begin{description}
+	\item [Tipo de comando:] [Solicitado | Auxiliar]
+	
+	\item [Justificación:] (de su uso si es auxiliar)
+	
+	\item [Archivos de entrada:] 
+		El archivo de configuración, si es que existe, para una instalación anterior. Se encuentra en:
+		\begin{verbatim}
+			$grupo/conf/practico.conf
+		\end{verbatim}
+		Todos los archivos binarios y de datos que seran instalados, se encuentran en 
+		\begin{verbatim}
+			$grupo/inst/bin/ 
+		\end{verbatim}	
+		y 
+		\begin{verbatim}	
+			$grupo/inst/data/
+		\end{verbatim}
+	
+	
+	\item [Archivos de salida:] 
+		\begin{itemize}
+			\item	Un archivo de configuración que se generará a partir de la instalación. Se encontrará en  
+					\begin{verbatim}	
+						$grupo/conf/practico.conf
+					\end{verbatim}	
+			\item Todos los archivos binarios y de datos que serán instalados. Se encontrarán en 
+					\begin{verbatim}	
+						$BINDIR 
+					\end{verbatim}
+					y 
+					\begin{verbatim}	
+						$DATADIR.
+					\end{verbatim}
+					
+			\item	Un archivo de log que tenga toda la información de registro de la instalación. Se encuentra en 
+					\begin{verbatim}
+						$grupo/log/instalar.log
+					\end{verbatim}
+					
+			\item	Un directorio donde se alojaran los archivos de log de todos los componentes que se ejecuten. Se encontrará en 
+					\begin{verbatim}
+						$LOGDIR.
+					\end{verbatim}
+		\end{itemize}
+	
+	\item [Hipotesis:] 
+			Para la instalación de los componentes necesarios, estos deben encontrarse dentro del directorio:
+				\begin{verbatim}
+					$grupo/inst/bin
+				\end{verbatim}
+			Todos los archivos que se encuentren en ese directorio se consideraran como componentes a instalar. 
+			El instalador detecta una instalación previa en caso de que encuentre su respectivo archivo de configuración. 
+			En caso de encontrar un componente imprime por pantalla que se ha encontrado ese componente y no se instalará.
+	
+	
+	\item [Ejemplos de invocación:]
+		\begin{verbatim}
+			$ instalar
+		\end{verbatim}
+		
+		De esta forma se inicia la instalacion del sistema.
+	
+	\item [Código fuente:]
+\end{description}
+
+
 \subsection{Comando Iniciar}
 \begin{description}
 	\item [Tipo de comando:] Solicitado
@@ -144,6 +212,8 @@ Cuando esté terminado el README insertar en el \verb|.tex| según su ruta hacie
 {\footnotesize
 \verbatiminput{../bin/interprete}
 }
+
+
 
 \subsection{Comando X}
 \begin{description}
