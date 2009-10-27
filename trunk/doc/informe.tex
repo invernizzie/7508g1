@@ -1,11 +1,12 @@
 \documentclass[12pt]{article}
-\pagestyle{plain}
+
 
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage[spanish]{babel}
 \usepackage [utf8]{inputenc}
 \usepackage{verbatim}
+\usepackage{fancyhdr}
 
 %\usepackage{amsmath}
 %\usepackage{tabulary}
@@ -14,9 +15,18 @@
 %\usepackage{graphicx}
 %\usepackage{float}
 
+\pagestyle{fancy}
+
+\fancyfoot[LO,LE]{Grupo 1 \\ Tema J}
+\fancyfoot[RO,RE]{\thepage}
+\fancyfoot[CO,CE]{ }
+%\fancyhead[LO,LE]{ }
+%\fancyhead[RO,RE]{ }
+\fancyhead{ }
 \begin{document}
 
 \tableofcontents
+\thispagestyle{empty}
 \clearpage
 
 \section{Hipótesis y Aclaraciones}
