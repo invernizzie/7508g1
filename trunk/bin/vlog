@@ -161,7 +161,7 @@ minuto=..
 
 MOSTRARARCHIVO=
 
-while getopts “l:H:m:D:M:A:c:h:b” OPTION
+while getopts “l:H:m:D:M:A:c:hb” OPTION
 do
 	case $OPTION in
 
