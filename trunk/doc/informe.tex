@@ -41,7 +41,11 @@ La correcta inicialización del entorno queda indicada mediante una variable def
 
 La ruta relativa de \verb|practico.conf| respecto del comando iniciar debe ser: \verb|../conf/practico.conf|. De esta forma se asegura que iniciar pueda encontrarlo y a partir de él recibir cualquier otra información sobre rutas que necesite para continuar su correcta ejecución.
 
-En el interprete la validación de que no haya archivos repetidos, se realiza verificando que los nombres no sean iguales y los contenidos tampoco. También como el enunciado pide que para los archivos de contratos generados se mantenga un formato numérico de diez caracteres para la parte entera y dos caracteres para la parte decimal, en caso de existir un número que tenga màs de esos caracteres (ya que puede suceder, al haber archivos cuyos registros tienen campos numéricos de hasta dieciseis caracteres para la parte entera) para la parte entera se cortarán los primeros diez caracteres de izquierda a derecha y para la decimal se cortarán los primeros dos caracteres de izquierda a derecha del número en cuestión.
+En el interprete la validación de que no haya archivos repetidos, se realiza verificando que los nombres no sean iguales y los contenidos tampoco. También como el enunciado pide que para los archivos de contratos generados se mantenga un formato numérico de diez caracteres para la parte entera y dos caracteres para la parte decimal, en caso de existir un número que tenga más de esos caracteres (ya que puede suceder, al haber archivos cuyos registros tienen campos numéricos de hasta dieciseis caracteres para la parte entera) para la parte entera se cortarán los primeros diez caracteres de izquierda a derecha y para la decimal se cortarán los primeros dos caracteres de izquierda a derecha del número en cuestión.
+
+En el reporte el número de contrato no se repite en los archivos de contrato (CONTRACT.<pais>). Por otro lado, se considera que todos los número de contrato presentes en el archivo de contratos también se encuentran en el archivo maestro contable de préstamos personales impagos. Si en el proceso de los archivo no se encuentra un registro correspondiente a un número de contrato, se informa utilizando el comando 'glog' y se finaliza la aplicación. 
+
+% á é í ó ú
 
 DETALLAR HIPÓTESIS ASUMIDAS SOBRE LA ESTRUCTURA DE DIRECTORIOS PARA PERMITIR A INSTALAR ENCONTRAR \verb|practico.conf|.
 
@@ -400,28 +404,60 @@ Cuando esté terminado el README insertar en el \verb|.tex| según su ruta hacie
 \verbatiminput{../bin/reporte.pl}
 }
 
-\subsection{Comando X}
+\subsection{Comandos Utilitarios}
+	Para probar la funcionalidad de los comandos solicitados, en particular el Interprete y Reporte, fue necesario crear datos en entrada para los mismos. Con el fin de automatizar esta tarea, y reducir la probabilidad de errores, se crearon dos scrpts utilitarios en  Perl: \verb|generar-contratos.pl|, que genera los archivos \verb|CONTRAT.<pais>|; y \verb|generar-dataok.pl| que genera archivos de entrada v\'alidos para el directorio data/ok.
+\subsubsection{Generar Contratos}
 \begin{description}
-	\item [Tipo de comando:] [Solicitado | Auxiliar]
+	\item [Tipo de comando:] Utilitario
 	
-	\item [Justificación:] (de su uso si es auxiliar)
-	
-	\item [Archivos de entrada:]
-	
-	\item [Archivos de salida:]
-	
-	\item [Parámetros:] (si tiene)
-	
-	\item [Opciones:] (si tiene)
-	
-	\item [Ejemplos de invocación:]
-	
+	\item [Justificacion: ] Automatizar la generaci\'on de archivos de prueba \verb|CONTRAT.<pais>| para probar el scrpt Reporte.
+	\item [Archivos de entrada:] Archivo Maestro Préstamos Personales Impagos ubicado \\ en \verb|$grupo/datadir/mae/PPI.mae|
+	\item [Archivos de salida:] Archivos \verb|CONTRAT.<pais>|.
+	\item [Ejemplos de invocación:]	El comando solo puede invocarse como
+	\begin{verbatim}$ ./generar-contratos.pl\end{verbatim}
+
+	\item [Descripci\'on: ]
+		Para que los archivos \verb|CONTRAT.<pais>| sean v\'alidos para el Reporte, es decir, puedan arrojar resultados en las consultas, no es suficiente con que \'estos tengan el formato solicitado, sino que tambi\'en se necesita que sus datos sean congruentes con los del archivo PPI.mae. Esto es, espec\'ificamente, que los n\'umeros de contrato en los registros del \verb|CONTRAT.<pais>| coincidan con los del archivo PPI.mae. 
+
+		Tambi\'en se tom\'o la consideraci\'on de que algunos de los contratos coincidan en monto con los del \verb|PPI.mae| y otros difieran, de manera que las consultas generen modificaciones.
+
+		Para cumplir con esto, la manera de generar los registros de los archivos \verb|CONTRAT.<pais>| es bas\'andose en los del \verb|PPI.mae|.
 	\item [Código fuente:]
+
 \end{description}
-% IMPORTANTE: Reemplazar tabulador por 4 espacios en los archivos fuente
 {\footnotesize
-%\verbatiminput{ruta relativa al archivo fuente}
+\verbatiminput{../utils/generar-contratos.pl}
 }
+
+\subsubsection{Generar archivos data/ok}
+\begin{description}
+	\item [Tipo de comando:] Utilitario
+	
+	\item [Justificacion: ] Automatizar la generaci\'on de archivos de prueba para el directorio de entrada \verb|data/ok| que cumplen con el formato utilizado por los sistemas legacy, para probar el comando Int\'erprete.
+	\item [Archivos de entrada:] 
+		\begin{enumerate}
+			\item Archivos \verb|CONTRAT.<pais>| generados por el comando \verb|generar-contratos.pl|.
+			\item Archivo de separadores de campo y decimal \verb|conf/T1.tab|.
+			\item Archivo de separadores de formatos de registros de sistemas legacy \verb|conf/T2.tab|.
+		\end{enumerate}
+
+	\item [Archivos de salida:] Archivos de contrato en formato legacy para el directorio \verb|data/ok| con la forma \verb|<pais>-<sistema>-<a\~no>-<mes>|
+	\item [Ejemplos de invocación:]	El comando solo puede invocarse como 
+	\begin{verbatim}$ ./generar-dataok.pl\end{verbatim}
+
+	\item [Descripci\'on: ]
+		B\'asicamente, este script genera a partir de los contratos en formato estandar en los archivos \verb|CONTRAT.<pais>| y del formato de sistemas legacy especificado en la tabla \verb|T2.tab| regsitros de contrato v\'alidos en formato legacy. Tambi\'en toma en cuenta los separadores de campos y separadores decimales especificados en \verb|T2.tab|
+
+		Para generar cada registro de los archivos de sistemas legacy se generan los valores de cada campo seg\'un el formato indicado en \verb|T2.tab|. Si el campo es un campo \textit{estandar}, es decir que el int\'erprete lo utilizar\'a para generar los \verb|CONTRAT.<pais>|, el valor del campo se genera convirtiendo el valor de ese mismo campo en el archivo \verb|CONTRAT.<pais>| de referencia (por ejemplo, los n\'umeros de contrato, los montos, etc). Si el campo no es estandar, se genera un valor aleatorio cumpliendo con el formato especificado.
+
+	\item [Código fuente:]
+
+\end{description}
+{\footnotesize
+\verbatiminput{../utils/generar-dataok.pl}
+}
+
+
 
 \section{Archivos}
 \subsection{Archivo de configuración general}
@@ -434,13 +470,6 @@ Cuando esté terminado el README insertar en el \verb|.tex| según su ruta hacie
 		\item Definición de una variable en formato bash: \verb|VARIABLE=VALOR|. El valor puede contener espacios internos, si debe tener espacios al comienzo deben escapearse o encomillarse, aunque se recomienda especialmente no utilizar espacios en las rutas.
 	\end{itemize}
 	Este archivo debe tener como mínimo una serie de variables indispensables que el comando instalar generará. Por tal motivo se recomienda que en caso de modificación no se eliminen variables previamente creadas, solo se las modifique y se agreguen variables nuevas.
-\end{description}
-
-\subsection{Archivo X}
-\begin{description}
-	\item [Nombre:] Su nombre
-	\item [Estructura:] Descripción de la estructura
-	\item [Justificación:] (de su uso si no es requerido por el enunciado)
 \end{description}
 
 
