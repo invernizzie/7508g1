@@ -213,7 +213,122 @@ Cuando esté terminado el README insertar en el \verb|.tex| según su ruta hacie
 \verbatiminput{../bin/interprete}
 }
 
+\subsection{Comando Vlog}
+\begin{description}
+	\item [Tipo de comando:] Solicitado
+	
+	\item [Archivos de entrada:] Archivos de log( ubicados en el LOGDIR).
+	
+	\item [Archivos de salida:] standar output.
+	
+	\item [Ejemplo de invocación:] El comando vlog puede invocarse como
+	\begin{verbatim}$ vlog\end{verbatim}
+        Así solo, el comando muestra por salida estandar todos los archivos de logs. 
+        Obviamente esto no es lo deseable en la mayoria de los casos por lo que este comando nos ofrece varios filtros para visualizar el archivo de log de cada uno de los comandos. 
+        De esta forma, se pueden filtrar los logs por comando, por fecha, hora y tipo de mensaje. 
+        Cabe destacar que en la varios filtros poseen la propiedad de hacerlo por rango. 
+        Por ejemplo, generalmente es bastante deseable que se filtren los sucesos que sucedieron entre tantos dias y a la vez entre un rango de horas determinadas. 
+        Todo esto es posible con esta herramienta. A continuación se muestran unos ejemplos con screenshots acerca de como usarla.
+        En la siguiente figura se puede ver el comando -h ( help). En ella se muestran las distintas opciones para poder filtrar los logs, y aluna opci\'on m\'as.
 
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.55]{imagenes/vlog/vlog_help.png}
+	\caption{Help del comando vlog}
+	\end{figure}
+
+        En las posteriores figuras se puede observar el log del comando iniciar, variando la cantidad de parámetros para obtener búsquedas más precisas.
+
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.45]{imagenes/vlog/vlog_filtro_comando.png}
+	\caption{vlog filtrando solo por comando(en este caso el comando iniciar)}
+	\end{figure}
+
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.55]{imagenes/vlog/vlog_comando_Tmsj_min.png}
+	\caption{vlog con filtros más exhaustivos. Filtros: comando(-c), tipo de mensaje(-l) y por rango de minutos (-m)}
+	\end{figure}
+
+	\item [Código fuente:]
+\end{description}
+{\footnotesize
+\verbatiminput{../bin/vlog}
+}
+
+% á é í ó ú
+\subsection{Comando Reporte}
+\begin{description}
+
+	\item [Tipo de comando:] Solicitado
+	
+	\item [Archivos de entrada:]
+		\begin{enumerate}
+		\item Archivo de Contratos de Préstamos Personales ubicado en \verb|$grupo/datadir/new/CONTRAT.<pais>|
+		\item Archivo Maestro Préstamos Personales Impagos ubicado \\ en \verb|$grupo/datadir/mae/PPI.mae|
+		\item Tabla de Paises y Sistemas ubicadas en \verb|$grupo/conf/p-s.tab|
+		\end{enumerate}
+
+	\item [Archivos de salida:] Los archivos de salida correspondientes a este comando, se generan si el usuario lo especifica. 
+		\begin{enumerate}
+		\item Log  \verb|$grupo/logdir/reporte.log|
+		\item Listados \verb|$grupo/datadir/list/<nombre listado>.<id>|
+		\item Archivo de Modificaciones de Contratos \verb|$grupo/datadir/new/MODIF.<pais>|
+		\end{enumerate}
+
+	\item [Ejemplos de invocación:]	El comando solo puede invocarse como
+	\begin{verbatim}$ reporte\end{verbatim}
+	de esta manera, se carga un menu interactivo en donde el usuario puede:
+		\begin{enumerate}
+		\item Cargar parámetros de la consulta a realizar
+		\item Activar o desactivar la grabación de los listados de consulta
+		\item Activar o desactivar la grabación de modificaciones de contrato
+		\item Realizar la consulta en base a los parámetros ingresados por teclado
+		\end{enumerate}
+
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{imagenes/reporte/reporte_menu.png}
+	\caption{Menú reporte}
+	\end{figure}
+
+	El reporte cuenta con un menú con cinco opciones disponibles, como se puede ver en la imagen anterior. 
+        La carga de parámetro se realiza por teclado y el único obligatorio es el nombre del pais.
+        La aplicación permite activar y desactivar la grabación de los listados y modificaciones en archivos.
+        Realizar consulta impreme por pantalla los listados correspondientes y una tabla con las modificaciones. 
+        En caso de haber activo la grabación en archivos, se realiza la escritura.
+        La última opción, como su nombre lo indica, nos permite abandonar la aplicación.
+
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.45]{imagenes/reporte/reporte_cargaParametros.png}
+	\caption{Carga de parámetros}
+	\end{figure}
+
+        Esta imágen corresponde a la carga de los parámetros de consulta y a la validación de los mismos.
+        En primer lugar se ingresan el pais y el sistema. 
+        La validación de estos parámetros se realizar consultando la tabla de países y sistemas ubicada en \verb|$grupo/conf/p-s.tab|. 
+        Luego se ingresa el año que, para superar el proceso de validación, debe ser superior a 2000. 
+        Por último se ingresa el mes, el cual debe ser un número entre 1 y 12.  
+
+	\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.35]{imagenes/reporte/reporte_listadosYModificaciones_A_6.png}
+	\caption{Ejemplo consulta}
+	\end{figure}
+
+        La siguiente imagém corresponde a la consulta \verb|país: A sistema: 6|.
+        No hay restricción sobre el resto de los parámetros.
+        La salida de los listados en archivos se produce en 6 ficheros distintos, llamados listadosX.<id>, en donde ``X'' e ``id'' denominan al tipo de consulta y usuario que la realizo, respectivamente. 
+
+
+	\item [Código fuente:]
+
+\end{description}
+{\footnotesize
+\verbatiminput{../bin/reporte.pl}
+}
 
 \subsection{Comando X}
 \begin{description}
@@ -236,40 +351,6 @@ Cuando esté terminado el README insertar en el \verb|.tex| según su ruta hacie
 % IMPORTANTE: Reemplazar tabulador por 4 espacios en los archivos fuente
 {\footnotesize
 %\verbatiminput{ruta relativa al archivo fuente}
-}
-% á é í ó ú
-\subsection{Comando Reporte}
-\begin{description}
-	\item [Tipo de comando:] Solicitado
-	
-	\item [Archivos de entrada:]
-		\begin{enumerate}
-		\item Archivo de Contratos de Préstamos Personales ubicado en \verb|$grupo/datadir/new/CONTRAT.<pais>|
-		\item Archivo Maestro Préstamos Personales Impagos ubicado en \verb|$grupo/datadir/mae/PPI.mae|
-		\item Tabla de Paises y Sistemas ubicadas en \verb|$grupo/conf/p-s.tab|
-		\end{enumerate}
-
-	\item [Archivos de salida:] Los archivos de salida correspondientes a este comando, se generan si el usuario lo especifica. 
-		\begin{enumerate}
-		\item Log  \verb|$grupo/logdir/reporte.log|
-		\item Listados \verb|$grupo/datadir/list/<nombre listado>.<id>|
-		\item Archivo de Modificaciones de Contratos \verb|$grupo/datadir/new/MODIF.<pais>|
-		\end{enumerate}
-
-	\item [Ejemplos de invocación:]	El comando solo puede invocarse como
-	\begin{verbatim}$ reporte\end{verbatim}
-	de esta manera, se carga un menu interactivo en donde el usuario puede:
-		\begin{enumerate}
-		\item Cargar parámetros de la consulta a realizar
-		\item Activar o desactivar la grabación de los listados de consulta
-		\item Activar o desactivar la grabación de modificaciones de contrato
-		\item Realizar la consulta en base a los parámetros ingresados por teclado
-		\end{enumerate}
-
-	\item [Código fuente:]
-\end{description}
-{\footnotesize
-\verbatiminput{../bin/reporte.pl}
 }
 
 \section{Archivos}
