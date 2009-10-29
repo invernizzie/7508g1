@@ -87,9 +87,9 @@ if [ -e "$CONFFILE" ]; then
 	# Construyo la lista de los componentes que tengo instalados, y otras dos
 	# con los datos que tengo que mostrar.
 	grep -e COMAND -e BINDIR -e USERID -e FECINS -e LOGDIR -e '^$' "$CONFFILE.old" > "$CONFFILE.temp"
-	listaComponentesInstalados=( $(grep "COMAND =" "$CONFFILE.temp" | sed 's/COMAND =//g') )
-	listaUsuariosInstalados=( $(grep "USERID =" "$CONFFILE.temp" | sed 's/USERID =//g') )
-	listaFechasInstalados=( $(grep "FECINS =" "$CONFFILE.temp" | sed 's/FECINS =//g') )
+	listaComponentesInstalados=( $(grep "COMAND=" "$CONFFILE.temp" | sed 's/COMAND=//g') )
+	listaUsuariosInstalados=( $(grep "USERID=" "$CONFFILE.temp" | sed 's/USERID=//g') )
+	listaFechasInstalados=( $(grep "FECINS=" "$CONFFILE.temp" | sed 's/FECINS=//g') )
 
 
 	# Determino y muestro la lista de componentes instalados. Recorro la
@@ -291,19 +291,30 @@ for componente in ${listaComponentesInstalarFinal[@]}; do
   echo "Instalando $componente"
 	cp "$grupo/inst/bin/$componente" "$BINDIR/$componente"
   chmod +x "$BINDIR/$componente"
-  echo "COMAND = $componente" >> "$CONFFILE"
-  echo "BINDIR = $BINDIR" >> "$CONFFILE"
-  echo "USERID = $USERNAME" >> "$CONFFILE"
-  echo "FECINS = $DATE" >> "$CONFFILE"
-  echo -e "LOGDIR = $LOGDIR\n" >> "$CONFFILE"
+  echo "COMAND=$componente" >> "$CONFFILE"
+  echo "BINDIR=$BINDIR" >> "$CONFFILE"
+  echo "USERID=$USERNAME" >> "$CONFFILE"
+  echo "FECINS=$DATE" >> "$CONFFILE"
+  echo -e "LOGDIR=$LOGDIR\n" >> "$CONFFILE"
 done
 
 # Agrego el valor de la variable grupo
-echo "GRUPO = $grupo" >> "$CONFFILE"
+echo "GRUPO=$grupo" >> "$CONFFILE"
 
 # Copio los archivos de datos. Copio todos indiscriminadamente a la nueva carpeta.
 # Si existen duplicados, se reemplazan por la version que se esta instalando.
 cp -r "$grupo/inst/data/" "$DATADIR/"
+
+while read line; do 
+  if ($line == "COMMAND=iniciar"); then
+      read line
+      BININICIAR=${line:7:(${#line[@]})}
+      break
+  fi
+done < $CONFFILE
+
+echo $BININICIAR
+sed "s/#### Linea reservada para asignacion de archivo de configuracion ####/export \$CONFFILE=$CONFFILE/g" "$BININICIAR/INICIAR"
 
 ### Paso 18 ###
 ### Paso 19 ###

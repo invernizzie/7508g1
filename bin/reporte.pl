@@ -1,19 +1,29 @@
 #! /usr/bin/perl
 
+# Para usar switch.
 use Switch;
 
+# Para que el compilador sea mas estricto.
+#use strict;
+use warnings;
+
 # Variables global.
-$usId = $ENV{"USER"};
+
 $pais = "A";
 $sistema = 6;
 $grabarListados = 0;
 $grabarModificaciones = 0;
-$LISTDIR = $ENV{"DATADIR"}."/list/";
-$archivoListadosTotales = $LISTDIR."ListadosTotales.txt";
 
 # Paises y sistemas válidos.
 %paisesValidos;
 %sistemasValidos;
+
+# Constantes.
+$USER_ID = $ENV{"USER"};
+$DATADIR = $ENV{"DATADIR"};
+$LISTDIR = "$DATADIR/list";
+$GRUPO = $ENV{"GRUPO"};
+
 
 # Valida que el entorno esté inicializado y aborta la ejecución con error en 
 # caso de ser así.
@@ -23,11 +33,21 @@ sub validarEntorno {
     print "Entorno no inicializado\n";
     exit 1;
   }
+  
+  foreach my $var ("DATADIR", "GRUPO") {
+    if (!$ENV{$var}) {
+      &glogAndExit("No exite la variable de entorno $var", "SE", 1);
+    }
+  }
+  
+  if (-e $LISTDIR && ! -d $LISTDIR) {
+    &glogAndExit("$LISTDIR no es un directorio", "SE", 1);
+  }
 }
 
 sub glog {
   my ($mensaje, $tipo) = @_;
-  #print "Reporte: $mensaje\n";
+  print "Reporte: $mensaje\n";
   `glog reporte "$tipo" "$mensaje"`
 }
 
@@ -41,7 +61,7 @@ sub glogAndExit {
 # archivo p-s.tab.
 sub inicializarPaisesSistemasValidos {
   
-  my $psTabDir = $ENV{"GRUPO"}."/conf/p-s.tab";
+  my $psTabDir = "$GRUPO/conf/p-s.tab";
   open (PSTAB, $psTabDir) || 
     glogAndExit ("No se pudo abrir el archivo $psTabDir", "SE", 1);
   
@@ -81,25 +101,25 @@ sub obtenerAnioActual {
 # No valida nada.
 sub validacionNula{
 
-  return @_[0];
+  return $_[0];
 }
 
 sub validarPais {
 
-  my $pais = @_[0];
+  my $pais = $_[0];
   return exists ($paisesValidos{$pais}) ? $pais : "";
 } 
 
 sub validarSistema{
   
-  my $sistema = @_[0];
+  my $sistema = $_[0];
   return exists ($sistemasValidos{$sistema}) ? $sistema : "";
 }
 
 # Se permiten todos los anios mayores a 1900.
 sub validarAnio{
 
-  my $anio = int(@_[0]); 
+  my $anio = int($_[0]); 
   #return $anio >= 2000 ? $anio : "";
   
   return 2000 <= $anio && $anio <= &obtenerAnioActual() ? $anio : "";
@@ -108,7 +128,7 @@ sub validarAnio{
 # Valida que un mes dado esté entre 1 y 12 y lo retorna.
 sub validarMes{
   
-  my $mes = int(@_[0]); 
+  my $mes = int($_[0]); 
   return $mes >= 1 && $mes <= 12 ? $mes : "";
 }
 
@@ -242,15 +262,15 @@ sub procesarConsulta{
   my @filtros = @_[0..3];
   my @entradas = @_[4..$#_];
   my @entrada;  
-  my ($consulta,$cantidadContratos,$montoMaestro,$montoContrato);
+  my ($montoMaestro,$montoContrato);
   
-  $cantidadContratos = $#entradas + 1;
+  my $cantidadContratos = $#entradas + 1;
 
   foreach my $elemento (@entradas) {
     
     @entrada = split("-",$elemento);
-    $montoMaestro += @entrada[3];
-    $montoContrato += @entrada[2];
+    $montoMaestro += $entrada[3];
+    $montoContrato += $entrada[2];
   }
 
   if ($cantidadContratos > 0) {
@@ -266,38 +286,39 @@ sub procesarConsulta{
 
 sub crearConsultaFormateada{
  # print "entro a imprimir consulta\n";
-  my $consultaSinFormato=$_[0];
  # print "consulta sin formato :" .  $consultaSinFormato;
-  chomp($consultaSinFormato);
+  my $consultaSinFormato = $_[0];
   my @entrada= split("-",$consultaSinFormato);
   my $linea;
     
   foreach my $campo (@entrada){
-    $linea = $linea . sprintf("%9s %s", $campo,"|");
+    $linea = $linea.sprintf("%9s |", $campo);
   }
-  $linea = $linea . "\n";
+  $linea = "$linea\n";
+  $linea = &convNotacionComa($linea);
   return $linea;
 }
 
 sub crearModificacionFormateada(){
  
- my $rArrayModificacion = @_[0];
- 
- foreach $modificacionSinFormato (@$rArrayModificacion){
- 
-  chomp($modificacionSinFormato);
-  my @entrada= split("-",$modificacionSinFormato);
-  $modificacionFormateada= $modificacionFormateada . sprintf '%12s %s', $pais,"|";
-  $modificacionFormateada= $modificacionFormateada . sprintf '%12s %s', $entrada[0],"|";
-  $modificacionFormateada= $modificacionFormateada . sprintf '%12s %s', $entrada[1],"|";
-  $modificacionFormateada= $modificacionFormateada . sprintf '%12s %s', $entrada[2],"|";
-  $modificacionFormateada= $modificacionFormateada . sprintf '%12s %s', $entrada[3],"|";
-  $modificacionFormateada= $modificacionFormateada . sprintf '%12s %s', $entrada[5],"|";
-  $modificacionFormateada= $modificacionFormateada . sprintf '%12s %s', $entrada[11],"|"; 
-  $modificacionFormateada= $modificacionFormateada . "\n";  
- }
- 
- return $modificacionFormateada;   
+  my @modificaciones = @_;
+
+  my $modificacionFormateada = "";
+  foreach my $modificacionSinFormato (@modificaciones){
+
+    chomp($modificacionSinFormato);
+    my @entrada= split("-",$modificacionSinFormato);
+    
+    # TODO Es medio cualquiera acceder a la variable global $pais así...
+    # muy asqueroso.
+    foreach my $campo ($pais, @entrada[0..3,5,11]) {
+      $modificacionFormateada = 
+        $modificacionFormateada.sprintf('%12s |', $campo);
+    }
+    $modificacionFormateada= $modificacionFormateada."\n";  
+  }
+
+  return &convNotacionComa($modificacionFormateada);   
 }
 
 sub convNotacionPunto{
@@ -315,37 +336,33 @@ sub convNotacionComa{
 }
 
 sub crearEncabezadoConsulta{
-  #$linea = sprintf '%42s %s',"Parametros","|";
-  my $linea = sprintf '%9s %s',"Pais","|";  
-  $linea = $linea . sprintf '%9s %s',"Sistema","|";
-  $linea = $linea . sprintf '%9s %s',"Anio","|";
-  $linea = $linea . sprintf  '%9s %s',"Mes","|";
-  $linea = $linea . sprintf '%9s %s',"Cant Con","|";
-  $linea = $linea . sprintf '%9s %s',"Est Cont","|";
-  $linea = $linea . sprintf  '%9s %s',"Est Mae","|";
-  $linea = $linea . sprintf  '%9s %s',"Monto Con","|";
-  $linea = $linea . sprintf  '%9s %s',"Monto Mae","|";
-  $linea = $linea . sprintf  "\n";
+  
+  my $linea = "";
+  my @campos = ("Pais", "Sistema", "Anio", "Mes", "Cant Con", "Est Cont",
+                "Est Mae", "Monto Con", "Monto Mae");
+  foreach my $campo (@campos) {
+    $linea = $linea.sprintf('%9s |', $campo);
+  }
+  $linea = "$linea\n";
   return $linea;
 }
 
 sub crearEncabezadoModificaciones{
-  #$linea = sprintf '%42s %s',"Parametros","|";
-  my $linea = sprintf '%12s %s',"Pais","|";  
-  $linea = $linea . sprintf '%12s %s',"Sistema","|";
-  $linea = $linea . sprintf '%12s %s',"Anio","|";
-  $linea = $linea . sprintf  '%12s %s',"Mes","|";
-  $linea = $linea . sprintf '%12s %s',"Num Cont","|";
-  $linea = $linea . sprintf '%12s %s',"Estado","|";
-  $linea = $linea . sprintf  '%12s %s',"Monto","|";
-  $linea = $linea . sprintf  "\n";
+
+  my $linea = "";
+  my @campos = ("Pais", "Sistema", "Anio", "Mes", "Num Cont", "Estado", 
+                "Monto");
+  foreach my $campo (@campos) {
+    $linea = $linea.sprintf('%12s |', $campo);
+  }
+  $linea = "$linea\n";
   return $linea;
 }
 
 sub procesarModificacion{
 
-  my ($rCons,$rPpiFiltrado,$rArrayModificaciones) = @_;
-  my $modificacion;
+  my ($rCons,$rPpiFiltrado) = @_;
+  my @modificaciones;
 
   my ($seg, $min, $hora, $dia, $mes, $anho, @zape) = localtime(time);
   # Los anios comienzan en 1900. Los meses van de 0 a 11.
@@ -353,23 +370,21 @@ sub procesarModificacion{
 
   my @cons = @$rCons;
   my %ppiFiltrado = %$rPpiFiltrado;
-  my (@entradaConsulta,@entradaMaestro);
 
   foreach my $elemento (@cons){
     
-    @entradaConsulta = split("-",$elemento);
-    my $nContrato = @entradaConsulta[4];
+    my @entradaConsulta = split("-",$elemento);
+    my $nContrato = $entradaConsulta[4];
     
-    @entradaMaestro = split("-",$ppiFiltrado{$nContrato});
+    my @entradaMaestro = split("-",$ppiFiltrado{$nContrato});
   
     my $consultaActual = join("-", @entradaMaestro[1,2,3],$nContrato,
                                @entradaMaestro[8,6,10..14], 
-                               @entradaConsulta[3],$fecha,$usId)."\n";
-    push(@$rArrayModificaciones,$consultaActual);
-    $modificacion = $modificacion.$consultaActual;
+                               $entradaConsulta[3],$fecha,$USER_ID)."\n";
+    push(@modificaciones,$consultaActual);
   }
   
-  return $modificacion;
+  return @modificaciones;
 }
 
 sub realizarConsulta{
@@ -378,8 +393,8 @@ sub realizarConsulta{
   my @filtrosContrato = @_[1..$#_];
   my $pais = $_[0];
 
-  my $ppiDir       = $ENV{"DATADIR"}."/mae/PPI.mae";
-  my $contratosDir = $ENV{"DATADIR"}."/new/CONTRAT.$pais";
+  my $ppiDir       = "$DATADIR/mae/PPI.mae";
+  my $contratosDir = "$DATADIR/new/CONTRAT.$pais";
   
   my %ppiFiltrado = 
     &filtrarArchivo($ppiDir,       "filtroArchivoMaestro",   @filtrosPPI);
@@ -403,7 +418,7 @@ sub realizarConsulta{
           @arrayMaestro[10,11,13,14];
   
       my $montoMaestro = $MT_CRD + $MT_IMPAGO + $MT_INDE - $MT_OTRSUMDC;
-      my $estadoMaestro = @arrayMaestro[6];
+      my $estadoMaestro = $arrayMaestro[6];
     
       my ($estadoContrato, $montoContrato) = @arrayContrato[5,11];
       
@@ -425,88 +440,98 @@ sub realizarConsulta{
       }
     }
     else{
-      &glogAndExit ("No existe el numero de contrato $nContrato en el archivo maestro",
-             "E");
+      &glogAndExit ("No existe el numero de contrato $nContrato en el archivo".
+                    " maestro", "E");
     }
   }
 
   # Listados.
   print "\nLISTADO\n";
   my @consultasFormateadas;
-  my $consulta;
-  my $consultaAux;
   my $encabezadoConsulta=&crearEncabezadoConsulta();
   
-  $consultaSinFormato = &procesarConsulta(@filtrosPPI,@consA)."\n";
-  $descConsulta = "Contratos comunes sanos con identico Monto Restante: \n";
-  $consulta = &crearConsultaFormateada($consultaSinFormato);
-  push(@consultasFormateadas,$descConsulta.$encabezadoConsulta.$consulta);
- 
-  $consultaSinFormato= &procesarConsulta(@filtrosPPI,@consB)."\n";
-  $descConsulta = "Contratos comunes dudosos con identico Monto Restante: \n";
-  $consulta = &crearConsultaFormateada($consultaSinFormato);
-  push(@consultasFormateadas,$descConsulta.$encabezadoConsulta.$consulta);
- 
-  $descConsulta = "Contratos comunes sanos con diferente Monto Restante: \n";
-  $consultaSinFormato=&procesarConsulta(@filtrosPPI,@consC)."\n";
-  $consulta = &crearConsultaFormateada($consultaSinFormato);
-  push(@consultasFormateadas,$descConsulta.$encabezadoConsulta.$consulta);
+  # Procesa y crea una conuslta formateada usando my @filtrosPPI.
+  # NOTA: definida como subrutina anónima para que no tenga visibilidad global.
+  my $procesarYCrearConsFormateada = sub{
+    return &crearConsultaFormateada(&procesarConsulta(@filtrosPPI, @_));
+  };
   
-  $descConsulta = "Contratos comunes dudosos con diferente Monto Restante: \n";
-  $consultaSinFormato=&procesarConsulta(@filtrosPPI,@consD)."\n";
-  $consulta = &crearConsultaFormateada($consultaSinFormato);
-  push(@consultasFormateadas,$descConsulta.$encabezadoConsulta.$consulta);
- 
-  $descConsulta = "Contratos comunes con diferente estado con identico Monto Restante: \n";
-	$consultaSinFormato= &procesarConsulta(@filtrosPPI,@consE1)."\n";
-  $consulta = &crearConsultaFormateada($consultaSinFormato);   
-	$consultaSinFormato= &procesarConsulta(@filtrosPPI,@consE2)."\n";
-  $consultaAux = &crearConsultaFormateada($consultaSinFormato);
-  push(@consultasFormateadas,$descConsulta.$encabezadoConsulta.$consulta.$consultaAux);
+  # Agrega una consulta formateada a my @consultasFormateadas.
+  my $agregarConsultaFormateada = sub {
+    my ($desc, @refsConsultas) = @_;
+    print "AGREGAR $#consultasFormateadas ".\@consultasFormateadas."\n";
+    my $consulta = "Contratos comunes $desc:\n$encabezadoConsulta";
+    foreach my $rConsulta (@refsConsultas) {
+      $consulta = $consulta.&$procesarYCrearConsFormateada(@$rConsulta);
+    }
+    push(@consultasFormateadas,$consulta);
+  };
+  
+  &$agregarConsultaFormateada(
+    "sanos con identico Monto Restante",    \@consA);
+  &$agregarConsultaFormateada(
+    "dudosos con identico Monto Restante",  \@consB);
+  &$agregarConsultaFormateada(
+    "sanos con diferente Monto Restante",   \@consC);
+  &$agregarConsultaFormateada(
+    "dudosos con diferente Monto Restante", \@consD);
+  &$agregarConsultaFormateada(
+    "con diferente estado con identico Monto Restante",  \@consE1, \@consE2);
+  &$agregarConsultaFormateada(
+    "con diferente estado con diferente Monto Restante", \@consF1, \@consF2);
 
-  $descConsulta = "Contratos comunes con diferente estado con diferente Monto Restante: \n";
-	$consultaSinFormato=&procesarConsulta(@filtrosPPI,@consF1)."\n";
-  $consulta = &crearConsultaFormateada($consultaSinFormato);
-	$consultaSinFormato=&procesarConsulta(@filtrosPPI,@consF2)."\n";
-  $consultaAux = &crearConsultaFormateada($consultaSinFormato);
-  push(@consultasFormateadas,$descConsulta.$encabezadoConsulta.$consulta.$consultaAux);
+  print "AAAAAA $#consultasFormateadas ".\@consultasFormateadas."\n";
+  print @consultasFormateadas;
 
   if ($grabarListados){ 
-    open(LISTADOS,">>$archivoListadosTotales");
-    foreach my $string (@consultasFormateadas){
-      print LISTADOS &convNotacionComa($string);
+    
+    if (! -e $LISTDIR) {
+      mkdir $LISTDIR || 
+        glogAndExit ("No se pudo crear el directorio $LISTDIR", "SE", 1);
     }
-    close(LISTADOS); 
+  
+    my $archivoListadosTotales = "$LISTDIR/ListadosTotales.txt";
+    open(LISTADOS_TOT,">>$archivoListadosTotales") || 
+      glogAndExit ("No se pudo abrir $archivoListadosTotales", "SE", 1);
+    
+    print LISTADOS_TOT @consultasFormateadas;
+    close(LISTADOS_TOT); 
     
     my $indice = 0;
     foreach my $idList ("A","B","C","D","E","F"){
-      open(arch  , ">>".$LISTDIR."list".$idList.".".$usId);
-      print arch $consultasFormateadas[$indice];
-      close(arch);
+      my $archLista = "$LISTDIR/list$idList.$USER_ID";
+      open(LISTADO  , ">>$archLista") ||
+        glogAndExit("No se pudo abrir $archLista", "SE", 1);
+      
+      print LISTADO $consultasFormateadas[$indice];
+      close(LISTADO);
       $indice++;
     }
   }
 
-  foreach my $string (@consultasFormateadas){
-    print &convNotacionComa($string);
-   }
+  
    
   # Modificaciones.
   print "\nMODIFICACIONES\n";
-  @arrayModificaciones;
-  my $modicaciones = &procesarModificacion(\@consC,\%ppiFiltrado,\@arrayModificaciones).
-                     &procesarModificacion(\@consE2,\%ppiFiltrado,\@arrayModificaciones).
-                     &procesarModificacion(\@consF2,\%ppiFiltrado,\@arrayModificaciones);
+  my @modificaciones = (
+    &procesarModificacion(\@consC,  \%ppiFiltrado),
+    &procesarModificacion(\@consE2, \%ppiFiltrado),
+    &procesarModificacion(\@consF2, \%ppiFiltrado),
+    );
+  print "MODIF @modificaciones\n";
   
-  my $modificacionesFormateadas = &crearModificacionFormateada(\@arrayModificaciones);
-
+  my $modificacionesFormateadas = &crearModificacionFormateada(@modificaciones);
+  
   print &crearEncabezadoModificaciones;
   print $modificacionesFormateadas;
   
   if ($grabarModificaciones){
-    $archivoModificaciones = $ENV{"DATADIR"}."new/MODIF.$pais";
-    open(MODIFICACIONES,">>$archivoModificaciones");
-    print MODIFICACIONES convNotacionComa($modicaciones);
+      
+    $archivoModificaciones = "$DATADIR/new/MODIF.$pais";
+    open(MODIFICACIONES,">$archivoModificaciones") || 
+      glogAndExit ("No se pudo abrir $archivoModificaciones", "SE", 1);
+    
+    print MODIFICACIONES convNotacionComa(join("",@modificaciones));
     close(MODIFICACIONES);
   }
   
@@ -521,7 +546,7 @@ sub menu{
   while (!$salir){
 
     system("clear");
-    print "Paramatros actuales de consulta, \Pais: $pais - ".
+    print "Paramatros actuales de consulta, Pais: $pais - ".
           "Sistema: $sistema - Anio: $anio - Mes: $mes\n";
     print "1- Cargar parametros de consulta.\n";
     print "2- ".($grabarListados ? "Desactivar" : "Activar").
