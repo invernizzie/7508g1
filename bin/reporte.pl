@@ -4,25 +4,27 @@
 use Switch;
 
 # Para que el compilador sea mas estricto.
-#use strict;
+use strict;
 use warnings;
 
 # Variables global.
 
-$pais = "A";
-$sistema = 6;
-$grabarListados = 0;
-$grabarModificaciones = 0;
+my $pais = "A";
+my $sistema = 6;
+my $anio = "";
+my $mes = "";
+my $grabarListados = 0;
+my $grabarModificaciones = 0;
 
 # Paises y sistemas válidos.
-%paisesValidos;
-%sistemasValidos;
+my %paisesValidos;
+my %sistemasValidos;
 
 # Constantes.
-$USER_ID = $ENV{"USER"};
-$DATADIR = $ENV{"DATADIR"};
-$LISTDIR = "$DATADIR/list";
-$GRUPO = $ENV{"GRUPO"};
+my $USER_ID = $ENV{"USER"};
+my $DATADIR = $ENV{"DATADIR"};
+my $LISTDIR = "$DATADIR/list";
+my $GRUPO = $ENV{"GRUPO"};
 
 
 # Valida que el entorno esté inicializado y aborta la ejecución con error en 
@@ -160,8 +162,8 @@ sub cargaParametro{
 sub cargaParametroOpcional{
   
   my ($parametro, $validacion, $mostrarValidos) = @_;
-  my $opcion;
-  my $respuesta;
+  my $opcion = "";
+  my $respuesta = "";
   
   while($opcion ne "s" && $opcion ne "n"){
     
@@ -181,14 +183,14 @@ sub cargaParametroOpcional{
 # Cargar parametros de consulta (Pais, Sistema, Anio y Mes)
 sub cargarParametrosDeConsulta{
 
-  my $pais = &cargaParametro("pais","validarPais", "mostrarPaisesValidos");
-  my $sistema = &cargaParametroOpcional("sistema","validarSistema", 
-                                        "mostrarSistemasValidos");
-  my $anio;
-  my $mes;
+  my $pais = &cargaParametro("pais",\&validarPais, \&mostrarPaisesValidos);
+  my $sistema = &cargaParametroOpcional("sistema",\&validarSistema, 
+                                        \&mostrarSistemasValidos);
+  my $anio = "";
+  my $mes = "";
 
-  if ($anio = &cargaParametroOpcional("anio", "validarAnio")){
-    $mes = &cargaParametroOpcional("mes", "validarMes");
+  if ($anio = &cargaParametroOpcional("anio", \&validarAnio)){
+    $mes = &cargaParametroOpcional("mes", \&validarMes);
   }
   
   return $pais, $sistema, $anio, $mes;
@@ -397,9 +399,9 @@ sub realizarConsulta{
   my $contratosDir = "$DATADIR/new/CONTRAT.$pais";
   
   my %ppiFiltrado = 
-    &filtrarArchivo($ppiDir,       "filtroArchivoMaestro",   @filtrosPPI);
+    &filtrarArchivo($ppiDir,       \&filtroArchivoMaestro,   @filtrosPPI);
   my %contratosFiltrado = 
-    &filtrarArchivo($contratosDir, "filtroArchivoContratos", @filtrosContrato);
+    &filtrarArchivo($contratosDir, \&filtroArchivoContratos, @filtrosContrato);
   
   my (@consA, @consB, @consC, @consD, @consE1, @consE2, @consF1, @consF2); 
 
@@ -422,9 +424,9 @@ sub realizarConsulta{
     
       my ($estadoContrato, $montoContrato) = @arrayContrato[5,11];
       
-      $lineaConsulta = join("-", $estadoContrato, $estadoMaestro, 
+      my $lineaConsulta = join("-", $estadoContrato, $estadoMaestro, 
                             $montoContrato, $montoMaestro, $nContrato);
-      $igualMonto = ($montoMaestro == $montoContrato);
+      my $igualMonto = ($montoMaestro == $montoContrato);
   
       my $estados = "$estadoMaestro $estadoContrato";
       switch ($estados) {
@@ -459,7 +461,6 @@ sub realizarConsulta{
   # Agrega una consulta formateada a my @consultasFormateadas.
   my $agregarConsultaFormateada = sub {
     my ($desc, @refsConsultas) = @_;
-    print "AGREGAR $#consultasFormateadas ".\@consultasFormateadas."\n";
     my $consulta = "Contratos comunes $desc:\n$encabezadoConsulta";
     foreach my $rConsulta (@refsConsultas) {
       $consulta = $consulta.&$procesarYCrearConsFormateada(@$rConsulta);
@@ -480,7 +481,6 @@ sub realizarConsulta{
   &$agregarConsultaFormateada(
     "con diferente estado con diferente Monto Restante", \@consF1, \@consF2);
 
-  print "AAAAAA $#consultasFormateadas ".\@consultasFormateadas."\n";
   print @consultasFormateadas;
 
   if ($grabarListados){ 
@@ -518,7 +518,6 @@ sub realizarConsulta{
     &procesarModificacion(\@consE2, \%ppiFiltrado),
     &procesarModificacion(\@consF2, \%ppiFiltrado),
     );
-  print "MODIF @modificaciones\n";
   
   my $modificacionesFormateadas = &crearModificacionFormateada(@modificaciones);
   
@@ -527,7 +526,7 @@ sub realizarConsulta{
   
   if ($grabarModificaciones){
       
-    $archivoModificaciones = "$DATADIR/new/MODIF.$pais";
+    my $archivoModificaciones = "$DATADIR/new/MODIF.$pais";
     open(MODIFICACIONES,">$archivoModificaciones") || 
       glogAndExit ("No se pudo abrir $archivoModificaciones", "SE", 1);
     
@@ -556,7 +555,7 @@ sub menu{
     print "4- Realizar consulta.\n";
     print "5- Salir.\n";
     print "Opcion: ";
-    $opcion = <STDIN>;
+    my $opcion = <STDIN>;
     chomp($opcion);
     
     switch ($opcion) {
