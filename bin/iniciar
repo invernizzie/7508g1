@@ -46,7 +46,7 @@ fi
 
 CONFFILE=../conf/practico.conf
 # Si la instalacion no reemplaza la siguiente linea, la anterior 
-#+se encarga de que exista la variable CONFFILE. Util para pruebas.
+# se encarga de que exista la variable CONFFILE. Util para pruebas.
 
 #### NO REMOVER. Linea reservada para asignacion de archivo de configuracion a la variable. ####
 
@@ -54,13 +54,13 @@ CONFFILE=../conf/practico.conf
 #export CONFFILE=../conf/practico.conf
 
 # El archivo de configuracion practico.conf debe existir
-if [ ! -e $CONFFILE ] || [ -d $CONFFILE ]; then
+if [ ! -e "$CONFFILE" ] || [ -d "$CONFFILE" ]; then
     imprimir "Archivo de configuracion $CONFFILE inexistente, instalacion corrupta"
     return $ENOINSTALADO
 fi
 
 # Se exportan las variables del archivo de configuracion
-LINEAS=$(wc -l <$CONFFILE)
+LINEAS=$(wc -l <"$CONFFILE")
 (( LINEAS += 1 ))
 CUENTA=0
 { # Se procesa el archivo de configuracion linea por linea
@@ -99,7 +99,7 @@ do
         fi
     fi
 done
-} <$CONFFILE
+} <"$CONFFILE"
 
 # Se chequea que el archivo practico.conf este completo
 for VAR in ${VARNECESARIAS[*]}
