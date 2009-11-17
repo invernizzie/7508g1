@@ -86,9 +86,9 @@ do
         do
             read LINEA
             # Se ve en el enunciado que los nombres tienen 6 caracteres
-            NOMBRE=$SUFIJO${LINEA:0:6}
-            VALOR=${LINEA:7}
-            export $NOMBRE=$VALOR
+            NOMBRE="$SUFIJO${LINEA:0:6}"
+            VALOR="${LINEA:7}"
+            export "$NOMBRE=$VALOR"
         done
     
     # Si no, se exporta la variable definida en la linea

@@ -1,0 +1,20 @@
+#! /bin/bash
+
+INST_DIR=prueba_instalacion
+
+
+rm -f -r $INST_DIR
+
+# Con -p crea todo el árbol.
+mkdir -p $INST_DIR/inst/data/mae
+mkdir -p $INST_DIR/inst/conf
+cp -r bin $INST_DIR/inst
+
+# El instalar no va ahí.
+mv $INST_DIR/inst/bin/instalar $INST_DIR/inst
+
+cp data/mae/PPI.mae $INST_DIR/inst/data/mae
+cp conf/*.tab $INST_DIR/inst/conf
+
+cd $INST_DIR/inst
+./instalar
