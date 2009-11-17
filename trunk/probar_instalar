@@ -8,7 +8,13 @@ rm -f -r $INST_DIR
 # Con -p crea todo el árbol.
 mkdir -p $INST_DIR/inst/data/mae
 mkdir -p $INST_DIR/inst/conf
-cp -r bin $INST_DIR/inst
+mkdir -p $INST_DIR/inst/bin
+
+# --ignore-backups ignora los archivos con ~ molestos.
+for arch in $(ls --ignore-backups bin)
+do
+  cp  bin/$arch $INST_DIR/inst/bin
+done
 
 # El instalar no va ahí.
 mv $INST_DIR/inst/bin/instalar $INST_DIR/inst
